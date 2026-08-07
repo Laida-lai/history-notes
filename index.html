@@ -108,7 +108,7 @@
         }
 
         textarea {
-            height: 60px;
+            height: 80px;
         }
 
         .input-tip {
@@ -371,8 +371,8 @@
     <div class="form-card" id="form-period" style="display: none;">
         <h3>新增歷史時期/時代 (長時間範圍)</h3>
         <div class="form-grid">
-            <input type="text" id="p_region" class="full-width" list="regionList" placeholder="相關國家 / 區域 (如: 台灣, 日本)" required>
-            <input type="text" id="p_name" class="full-width" placeholder="時期名稱 (如: 冷戰時期)" required>
+            <input type="text" id="p_region" class="full-width" list="regionList" placeholder="相關國家 / 區域 (多個請用逗號隔開，如: 美國, 西歐)" required>
+            <input type="text" id="p_name" class="full-width" placeholder="時期名稱 (如: 馬歇爾計畫)" required>
             
             <select id="p_start_era">
                 <option value="CE">開始：西元 (CE)</option>
@@ -671,6 +671,7 @@
 
             modalBody.innerHTML = `
                 <div class="form-grid">
+                    <input type="text" id="edit_region" class="full-width" list="regionList" value="${(e.regions || []).join(', ')}" placeholder="國家 / 區域 (多個請用逗號隔開)" required>
                     <select id="edit_era">
                         <option value="CE" ${e.era === 'CE' ? 'selected' : ''}>西元 (CE)</option>
                         <option value="BCE" ${e.era === 'BCE' ? 'selected' : ''}>西元前 (BCE)</option>
@@ -678,11 +679,11 @@
                     <input type="number" id="edit_year" value="${e.year}" placeholder="年份" required>
                     <input type="number" id="edit_month" value="${e.month || ''}" min="1" max="12" placeholder="月份">
                     <input type="number" id="edit_day" value="${e.day || ''}" min="1" max="31" placeholder="日期">
-                    <input type="text" id="edit_region" class="full-width" list="regionList" value="${e.regions.join(', ')}" placeholder="國家 / 區域 (用逗號隔開)" required>
                     <select id="edit_belongPeriod" class="full-width">${periodOptions}</select>
                     <input type="text" id="edit_title" class="full-width" value="${e.title}" placeholder="事件名稱" required>
                     <textarea id="edit_desc" class="full-width" placeholder="詳細內容...">${e.desc || ''}</textarea>
                 </div>
+                <div class="input-tip">💡 多個國家請使用逗號分隔，例如：<code>美國, 西歐, 德國</code></div>
                 <button class="btn-add" onclick="saveEdit('event', ${e.id})">儲存變更</button>
             `;
         } else {
@@ -692,7 +693,7 @@
             modalTitle.innerText = '編輯歷史時期';
             modalBody.innerHTML = `
                 <div class="form-grid">
-                    <input type="text" id="edit_p_region" class="full-width" list="regionList" value="${p.regions.join(', ')}" placeholder="國家 / 區域 (用逗號隔開)" required>
+                    <input type="text" id="edit_p_region" class="full-width" list="regionList" value="${(p.regions || []).join(', ')}" placeholder="國家 / 區域 (多個請用逗號隔開)" required>
                     <input type="text" id="edit_p_name" class="full-width" value="${p.name}" placeholder="時期名稱" required>
                     
                     <select id="edit_p_start_era">
@@ -713,6 +714,7 @@
 
                     <textarea id="edit_p_desc" class="full-width" placeholder="該時期的背景說明...">${p.desc || ''}</textarea>
                 </div>
+                <div class="input-tip">💡 多個國家請使用逗號分隔，例如：<code>美國, 西歐, 德國</code></div>
                 <button class="btn-add" style="background-color: var(--period-color);" onclick="saveEdit('period', ${p.id})">儲存變更</button>
             `;
         }
