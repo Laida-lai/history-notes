@@ -379,7 +379,14 @@
     </div>
 
     <datalist id="regionList"></datalist>
-    <datalist id="landList"></datalist>
+    
+    <!-- 整合圖片中的 datalist 選項選單 -->
+    <datalist id="saved-locations-list">
+        <option value="未指定土地"></option>
+        <option value="台灣"></option>
+        <option value="高雄市"></option>
+        <!-- 這裡放置預設或歷史紀錄 -->
+    </datalist>
 
     <!-- 新增事件表單 -->
     <div class="form-card" id="form-event">
@@ -392,7 +399,7 @@
             <input type="number" id="year" placeholder="年份 (如: 1991)" required>
             <input type="number" id="month" min="1" max="12" placeholder="月份 (選填)">
             <input type="number" id="day" min="1" max="31" placeholder="日期 (選填)">
-            <input type="text" id="land" class="full-width" list="landList" placeholder="📍 根本地理土地/區域 (如: 莫斯科/東歐平原、臺灣島、中原)" required>
+            <input type="text" id="land" name="land" class="full-width" list="saved-locations-list" placeholder="📍 根本地理土地/區域 (如: 莫斯科/東歐平原、臺灣島、中原)" autocomplete="off" required>
             <input type="text" id="region" class="full-width" list="regionList" placeholder="當時政權/國家 (如: 蘇聯, 俄羅斯)" required>
             <select id="belongPeriod" class="full-width">
                 <option value="AUTO">✨ 自動歸類（依政權與時間比對時期）</option>
@@ -409,7 +416,7 @@
     <div class="form-card" id="form-period" style="display: none;">
         <h3>新增政權 / 歷史時期 (長時間範圍)</h3>
         <div class="form-grid">
-            <input type="text" id="p_land" class="full-width" list="landList" placeholder="📍 根本地理土地/區域 (如: 莫斯科/東歐平原)" required>
+            <input type="text" id="p_land" name="land" class="full-width" list="saved-locations-list" placeholder="📍 根本地理土地/區域 (如: 莫斯科/東歐平原)" autocomplete="off" required>
             <input type="text" id="p_region" class="full-width" list="regionList" placeholder="政權/國家名稱 (如: 蘇聯、俄羅斯帝國)" required>
             <input type="text" id="p_name" class="full-width" placeholder="時期/政權全稱 (如: 蘇維埃社會主義共和國聯盟時期)" required>
             
@@ -736,7 +743,7 @@
 
             modalBody.innerHTML = `
                 <div class="form-grid">
-                    <input type="text" id="edit_land" class="full-width" list="landList" value="${e.land || ''}" placeholder="📍 地理土地區域" required>
+                    <input type="text" id="edit_land" class="full-width" name="land" list="saved-locations-list" value="${e.land || ''}" placeholder="📍 地理土地區域" autocomplete="off" required>
                     <input type="text" id="edit_region" class="full-width" list="regionList" value="${(e.regions || []).join(', ')}" placeholder="當時政權 / 國家" required>
                     <select id="edit_era">
                         <option value="CE" ${e.era === 'CE' ? 'selected' : ''}>西元 (CE)</option>
@@ -758,7 +765,7 @@
             modalTitle.innerText = '編輯歷史時期/政權';
             modalBody.innerHTML = `
                 <div class="form-grid">
-                    <input type="text" id="edit_p_land" class="full-width" list="landList" value="${p.land || ''}" placeholder="📍 地理土地區域" required>
+                    <input type="text" id="edit_p_land" class="full-width" name="land" list="saved-locations-list" value="${p.land || ''}" placeholder="📍 地理土地區域" autocomplete="off" required>
                     <input type="text" id="edit_p_region" class="full-width" list="regionList" value="${(p.regions || []).join(', ')}" placeholder="政權 / 國家名稱" required>
                     <input type="text" id="edit_p_name" class="full-width" value="${p.name}" placeholder="時期名稱" required>
                     
@@ -855,286 +862,198 @@
         closeModal('editModal');
     }
 
-    function updateDropdowns() {
-        const filterSelect = document.getElementById('filterRegion');
-        const filterLandSelect = document.getElementById('filterLand');
-
-        const currentFilter = filterSelect.value;
-        const currentLandFilter = filterLandSelect.value;
-        
-        let allRegionsSet = new Set();
-        let allLandsSet = new Set();
-
-        window.events.forEach(e => {
-            (e.regions || []).forEach(r => allRegionsSet.add(r));
-            if (e.land) allLandsSet.add(e.land);
-        });
-        window.periods.forEach(p => {
-            (p.regions || []).forEach(r => allRegionsSet.add(r));
-            if (p.land) allLandsSet.add(p.land);
-        });
-
-        const allRegions = [...allRegionsSet].filter(Boolean);
-        const allLands = [...allLandsSet].filter(Boolean);
-
-        filterSelect.innerHTML = '<option value="ALL">全覽（全世界模式）</option>';
-        allRegions.forEach(r => filterSelect.innerHTML += `<option value="${r}">${r}</option>`);
-        filterSelect.value = currentFilter;
-
-        filterLandSelect.innerHTML = '<option value="ALL">全部土地區域</option>';
-        allLands.forEach(l => filterLandSelect.innerHTML += `<option value="${l}">${l}</option>`);
-        filterLandSelect.value = currentLandFilter;
-
-        document.getElementById('regionList').innerHTML = allRegions.map(r => `<option value="${r}"></option>`).join('');
-        document.getElementById('landList').innerHTML = allLands.map(l => `<option value="${l}"></option>`).join('');
-
-        const periodSelect = document.getElementById('belongPeriod');
-        periodSelect.innerHTML = `
-            <option value="AUTO">✨ 自動歸類（依政權與時間比對時期）</option>
-            <option value="NONE">-- 不設為任何時期 --</option>
-        `;
-        window.periods.forEach(p => {
-            periodSelect.innerHTML += `<option value="${p.id}">手動指定：${p.land ? '['+p.land+'] ' : ''}${p.regions.join(', ')} - ${p.name}</option>`;
-        });
-    }
-
-    function renderTimeline() {
-        const timeline = document.getElementById('timeline');
-        const regionFilter = document.getElementById('filterRegion').value;
-        const landFilter = document.getElementById('filterLand').value;
-
-        let listItems = [];
-
-        window.periods.forEach(p => {
-            listItems.push({
-                itemType: 'period',
-                sortVal: getExactSortValue(p.startEra, p.startYear, p.startMonth, p.startDay),
-                data: p
-            });
-        });
-
-        window.events.forEach(e => {
-            listItems.push({
-                itemType: 'event',
-                sortVal: getExactSortValue(e.era, e.year, e.month, e.day),
-                data: e
-            });
-        });
-
-        listItems.sort((a, b) => a.sortVal - b.sortVal);
-
-        if (regionFilter !== 'ALL') {
-            listItems = listItems.filter(item => item.data.regions && item.data.regions.includes(regionFilter));
-        }
-
-        if (landFilter !== 'ALL') {
-            listItems = listItems.filter(item => item.data.land === landFilter);
-        }
-
-        document.getElementById('totalStats').innerText = `已記錄 ${listItems.length} 個歷史項目`;
-        timeline.innerHTML = '';
-
-        if (listItems.length === 0) {
-            timeline.innerHTML = '<p style="text-align:center; color:#888;">尚無相關歷史紀錄</p>';
-            return;
-        }
-
-        listItems.forEach(item => {
-            if (item.itemType === 'period') {
-                const p = item.data;
-                const subEvents = window.events.filter(e => e.periodId === p.id);
-                const regionTags = p.regions.map(r => `<span class="tag tag-region">${r}</span>`).join('');
-                const landTag = p.land ? `<span class="tag tag-land">📍 ${p.land}</span>` : '';
-
-                const html = `
-                    <div class="timeline-item">
-                        <div class="timeline-year">
-                            ${formatDate(p.startEra, p.startYear, p.startMonth, p.startDay)}<br>至<br>${formatDate(p.endEra, p.endYear, p.endMonth, p.endDay)}
-                        </div>
-                        <div class="timeline-marker period-marker"></div>
-                        <div class="timeline-content period-content">
-                            <div class="tag-container">
-                                ${landTag}
-                                ${regionTags}
-                                <span class="tag tag-period">⏳ 政權 / 歷史時期</span>
-                            </div>
-                            <h4 class="event-title">${p.name}</h4>
-                            <p class="event-desc">${p.desc || '無備註說明'}</p>
-                            ${subEvents.length > 0 ? `<div style="font-size:12px; color:#555; background:#fff; padding:8px; border-radius:4px; margin-bottom:8px;">
-                                <b>此時期下記錄事件 (${subEvents.length})：</b><br>
-                                ${subEvents.map(se => `• ${formatDate(se.era, se.year, se.month, se.day)}：${se.title}`).join('<br>')}
-                            </div>` : ''}
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <button class="btn-land" onclick="showLandLineage('${p.land}')">
-                                    🗺️ 檢視 [${p.land}] 土地政權演變脈絡
-                                </button>
-                                <div class="action-btns">
-                                    <button class="btn-action btn-edit" onclick="openEditModal('period', ${p.id})">✏️ 編輯</button>
-                                    <button class="btn-action btn-delete" onclick="deleteItem('period', ${p.id})">🗑️ 刪除</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                timeline.innerHTML += html;
-            } else {
-                const e = item.data;
-                const parentPeriod = window.periods.find(p => p.id === e.periodId);
-                const sameYearEventsCount = window.events.filter(ev => ev.era === e.era && ev.year === e.year).length;
-                const regionTags = e.regions.map(r => `<span class="tag tag-region">${r}</span>`).join('');
-                const landTag = e.land ? `<span class="tag tag-land">📍 ${e.land}</span>` : '';
-
-                const html = `
-                    <div class="timeline-item">
-                        <div class="timeline-year">${formatDate(e.era, e.year, e.month, e.day)}</div>
-                        <div class="timeline-marker"></div>
-                        <div class="timeline-content">
-                            <div class="tag-container">
-                                ${landTag}
-                                ${regionTags}
-                                ${parentPeriod ? `<span class="tag tag-period">政權時期：${parentPeriod.name}</span>` : ''}
-                            </div>
-                            <h4 class="event-title">${e.title}</h4>
-                            <p class="event-desc">${e.desc || '無詳細說明'}</p>
-                            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:5px;">
-                                <div style="display:flex; gap:5px;">
-                                    <button class="btn-sync" onclick="showWorldContext('${e.era}', ${e.year})">
-                                        🌍 同年世界 (${sameYearEventsCount})
-                                    </button>
-                                    <button class="btn-land" onclick="showLandLineage('${e.land}')">
-                                        🗺️ [${e.land}] 土地演變
-                                    </button>
-                                </div>
-                                <div class="action-btns">
-                                    <button class="btn-action btn-edit" onclick="openEditModal('event', ${e.id})">✏️ 編輯</button>
-                                    <button class="btn-action btn-delete" onclick="deleteItem('event', ${e.id})">🗑️ 刪除</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                timeline.innerHTML += html;
-            }
-        });
-    }
-
-    /* 顯示某一塊土地上的完整歷史政權演變脈絡 */
-    function showLandLineage(landName) {
-        if (!landName || landName === '未指定土地') {
-            alert('此項目尚未指定土地區域！');
-            return;
-        }
-
-        const lineageModal = document.getElementById('lineageModal');
-        const lineageModalTitle = document.getElementById('lineageModalTitle');
-        const lineageModalBody = document.getElementById('lineageModalBody');
-
-        lineageModalTitle.innerText = `📍 【${landName}】地理土地的歷史政權演變脈絡`;
-
-        const landPeriods = window.periods.filter(p => p.land === landName)
-            .sort((a,b) => getExactSortValue(a.startEra, a.startYear, a.startMonth, a.startDay) - getExactSortValue(b.startEra, b.startYear, b.startMonth, b.startDay));
-
-        const landEvents = window.events.filter(e => e.land === landName)
-            .sort((a,b) => getExactSortValue(a.era, a.year, a.month, a.day) - getExactSortValue(b.era, b.year, b.month, b.day));
-
-        let content = `<p style="color:#666; font-size:14px; margin-bottom:20px;">這塊土地歷史上經歷過以下政權與重大轉折：</p>`;
-
-        if (landPeriods.length === 0 && landEvents.length === 0) {
-            content += `<p style="color:#888;">尚無此土地的歷史紀錄。</p>`;
-        } else {
-            content += `<h4 style="color:var(--land-color);">⏳ 歷代統治政權／時期流變：</h4>`;
-            landPeriods.forEach(p => {
-                content += `
-                    <div class="lineage-step">
-                        <div style="font-size:13px; color:#e74c3c; font-weight:bold;">
-                            ${formatDate(p.startEra, p.startYear, p.startMonth, p.startDay)} ～ ${formatDate(p.endEra, p.endYear, p.endMonth, p.endDay)}
-                        </div>
-                        <div style="font-size:16px; font-weight:bold; color:var(--primary);">${p.name} (${p.regions.join(', ')})</div>
-                        <div style="font-size:13px; color:#555; margin-top:4px;">${p.desc || '無詳細說明'}</div>
-                    </div>
-                `;
-            });
-
-            content += `<h4 style="color:var(--primary); margin-top:25px;">📍 發生在這塊土地上的重大事件：</h4>`;
-            landEvents.forEach(e => {
-                content += `
-                    <div style="background:#f8f9fa; padding:8px 12px; border-radius:4px; margin-bottom:8px; border-left:3px solid var(--accent);">
-                        <span style="font-size:12px; color:var(--accent); font-weight:bold;">${formatDate(e.era, e.year, e.month, e.day)}</span> - 
-                        <b>${e.title}</b> (${e.regions.join(', ')})
-                        <div style="font-size:12px; color:#666;">${e.desc || ''}</div>
-                    </div>
-                `;
-            });
-        }
-
-        lineageModalBody.innerHTML = content;
-        lineageModal.style.display = 'flex';
-    }
-
-    function showWorldContext(era, year) {
-        const sameYearEvents = window.events.filter(e => e.era === era && e.year === year);
-        const activePeriods = window.periods.filter(p => {
-            const start = getExactSortValue(p.startEra, p.startYear, p.startMonth, p.startDay);
-            const end = getExactSortValue(p.endEra, p.endYear, p.endMonth, p.endDay);
-            const current = getExactSortValue(era, year);
-            return current >= start && current <= end;
-        });
-
-        const modal = document.getElementById('syncModal');
-        const modalTitle = document.getElementById('modalTitle');
-        const modalBody = document.getElementById('modalBody');
-
-        modalTitle.innerText = `【${era === 'BCE' ? '西元前 ' + year : '西元 ' + year} 年】全球歷史視角`;
-        modalBody.innerHTML = '';
-
-        let content = `<h4>📍 同年發生的具體事件 (${sameYearEvents.length})：</h4>`;
-        if (sameYearEvents.length > 0) {
-            sameYearEvents.forEach(e => {
-                content += `
-                    <div class="world-event-card">
-                        <div style="font-weight:bold; color:var(--primary);">${e.land ? '['+e.land+'] ' : ''}${e.regions.join(', ')} (${formatDate(e.era, e.year, e.month, e.day)})</div>
-                        <div style="font-size:15px; margin: 2px 0;"><b>${e.title}</b></div>
-                        <div style="font-size:13px; color:#555;">${e.desc || '無詳細說明'}</div>
-                    </div>
-                `;
-            });
-        } else {
-            content += `<p style="color:#888; font-size:13px;">該年份尚無其他獨立事件紀錄。</p>`;
-        }
-
-        content += `<h4 style="margin-top:20px;">⏳ 當時全球正處於哪些歷史時期 (${activePeriods.length})：</h4>`;
-        if (activePeriods.length > 0) {
-            activePeriods.forEach(p => {
-                content += `
-                    <div class="world-event-card" style="border-left-color: var(--period-color);">
-                        <div style="font-weight:bold; color:var(--period-color);">${p.land ? '['+p.land+'] ' : ''}${p.regions.join(', ')}</div>
-                        <div style="font-size:15px; margin: 2px 0;"><b>${p.name}</b> (${formatDate(p.startEra, p.startYear, p.startMonth, p.startDay)} ~ ${formatDate(p.endEra, p.endYear, p.endMonth, p.endDay)})</div>
-                        <div style="font-size:13px; color:#555;">${p.desc || ''}</div>
-                    </div>
-                `;
-            });
-        } else {
-            content += `<p style="color:#888; font-size:13px;">該年份尚無涵蓋的歷史時期紀錄。</p>`;
-        }
-
-        modalBody.innerHTML = content;
-        modal.style.display = 'flex';
-    }
-
     function closeModal(modalId) {
         document.getElementById(modalId).style.display = 'none';
     }
 
-    window.switchTab = switchTab;
-    window.addPeriod = addPeriod;
-    window.addEvent = addEvent;
-    window.deleteItem = deleteItem;
-    window.openEditModal = openEditModal;
-    window.saveEdit = saveEdit;
-    window.renderTimeline = renderTimeline;
-    window.showWorldContext = showWorldContext;
-    window.showLandLineage = showLandLineage;
-    window.closeModal = closeModal;
+    function updateDropdowns() {
+        const regionsSet = new Set();
+        const landsSet = new Set();
+
+        window.events.concat(window.periods).forEach(item => {
+            if (item.land) landsSet.add(item.land);
+            if (item.regions) item.regions.forEach(r => regionsSet.add(r));
+        });
+
+        const filterRegion = document.getElementById('filterRegion');
+        const filterLand = document.getElementById('filterLand');
+        const regionList = document.getElementById('regionList');
+
+        const currentRegion = filterRegion.value;
+        const currentLand = filterLand.value;
+
+        filterRegion.innerHTML = '<option value="ALL">全覽（全世界模式）</option>';
+        regionsSet.forEach(r => {
+            filterRegion.innerHTML += `<option value="${r}">${r}</option>`;
+        });
+        filterRegion.value = regionsSet.has(currentRegion) ? currentRegion : 'ALL';
+
+        filterLand.innerHTML = '<option value="ALL">全部土地區域</option>';
+        landsSet.forEach(l => {
+            filterLand.innerHTML += `<option value="${l}">${l}</option>`;
+        });
+        filterLand.value = landsSet.has(currentLand) ? currentLand : 'ALL';
+
+        regionList.innerHTML = '';
+        regionsSet.forEach(r => {
+            regionList.innerHTML += `<option value="${r}">`;
+        });
+    }
+
+    function renderTimeline() {
+        const filterRegionValue = document.getElementById('filterRegion').value;
+        const filterLandValue = document.getElementById('filterLand').value;
+        const timelineEl = document.getElementById('timeline');
+        timelineEl.innerHTML = '';
+
+        let filteredEvents = window.events.filter(e => {
+            const matchRegion = filterRegionValue === 'ALL' || (e.regions && e.regions.includes(filterRegionValue));
+            const matchLand = filterLandValue === 'ALL' || e.land === filterLandValue;
+            return matchRegion && matchLand;
+        });
+
+        let filteredPeriods = window.periods.filter(p => {
+            const matchRegion = filterRegionValue === 'ALL' || (p.regions && p.regions.includes(filterRegionValue));
+            const matchLand = filterLandValue === 'ALL' || p.land === filterLandValue;
+            return matchRegion && matchLand;
+        });
+
+        document.getElementById('totalStats').innerText = `目前顯示：${filteredEvents.length} 個事件，${filteredPeriods.length} 個時期/政權`;
+
+        const items = [];
+
+        filteredEvents.forEach(e => {
+            items.push({
+                type: 'event',
+                data: e,
+                sortVal: getExactSortValue(e.era, e.year, e.month, e.day)
+            });
+        });
+
+        filteredPeriods.forEach(p => {
+            items.push({
+                type: 'period',
+                data: p,
+                sortVal: getExactSortValue(p.startEra, p.startYear, p.startMonth, p.startDay)
+            });
+        });
+
+        items.sort((a, b) => a.sortVal - b.sortVal);
+
+        items.forEach(item => {
+            if (item.type === 'event') {
+                const e = item.data;
+                const period = window.periods.find(p => p.id === e.periodId);
+                const periodTagHtml = period ? `<span class="tag tag-period">⏳ ${period.name}</span>` : '';
+                const landTagHtml = `<span class="tag tag-land">📍 ${e.land}</span>`;
+                const regionTagsHtml = e.regions.map(r => `<span class="tag tag-region">🏛️ ${r}</span>`).join(' ');
+
+                const div = document.createElement('div');
+                div.className = 'timeline-item';
+                div.innerHTML = `
+                    <div class="timeline-year">${formatDate(e.era, e.year, e.month, e.day)}</div>
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <div class="tag-container">${landTagHtml} ${regionTagsHtml} ${periodTagHtml}</div>
+                        <h4 class="event-title">${e.title}</h4>
+                        <p class="event-desc">${e.desc || ''}</p>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                            <div style="display: flex; gap: 5px;">
+                                <button class="btn-sync" onclick="openSyncModal('${e.era}', ${e.year})">🌍 查看同年份世界歷史</button>
+                                <button class="btn-land" onclick="openLineageModal('${e.land}')">🗺️ 查看此土地政權演變</button>
+                            </div>
+                            <div class="action-btns">
+                                <button class="btn-action btn-edit" onclick="openEditModal('event', ${e.id})">編輯</button>
+                                <button class="btn-action btn-delete" onclick="deleteItem('event', ${e.id})">刪除</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                timelineEl.appendChild(div);
+            } else {
+                const p = item.data;
+                const landTagHtml = `<span class="tag tag-land">📍 ${p.land}</span>`;
+                const regionTagsHtml = p.regions.map(r => `<span class="tag tag-region">🏛️ ${r}</span>`).join(' ');
+
+                const div = document.createElement('div');
+                div.className = 'timeline-item';
+                div.innerHTML = `
+                    <div class="timeline-year" style="color: var(--period-color);">
+                        ${formatDate(p.startEra, p.startYear, p.startMonth, p.startDay)}<br>|<br>${formatDate(p.endEra, p.endYear, p.endMonth, p.endDay)}
+                    </div>
+                    <div class="timeline-marker period-marker"></div>
+                    <div class="timeline-content period-content">
+                        <div class="tag-container">${landTagHtml} ${regionTagsHtml}</div>
+                        <h4 class="event-title" style="color: var(--period-color);">⏳ 政權時期：${p.name}</h4>
+                        <p class="event-desc">${p.desc || ''}</p>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                            <button class="btn-land" onclick="openLineageModal('${p.land}')">🗺️ 查看此土地政權演變</button>
+                            <div class="action-btns">
+                                <button class="btn-action btn-edit" onclick="openEditModal('period', ${p.id})">編輯</button>
+                                <button class="btn-action btn-delete" onclick="deleteItem('period', ${p.id})">刪除</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                timelineEl.appendChild(div);
+            }
+        });
+    }
+
+    function openSyncModal(era, year) {
+        const modal = document.getElementById('syncModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalBody = document.getElementById('modalBody');
+
+        const yearLabel = era === 'BCE' ? `西元前 ${year} 年` : `西元 ${year} 年`;
+        modalTitle.innerText = `🌍 同時間的世界（${yearLabel}）`;
+
+        const sameYearEvents = window.events.filter(e => e.era === era && e.year === year);
+
+        if (sameYearEvents.length === 0) {
+            modalBody.innerHTML = '<p>這個年份目前沒有其他記錄的事件。</p>';
+        } else {
+            modalBody.innerHTML = sameYearEvents.map(e => `
+                <div class="world-event-card">
+                    <div class="tag-container">
+                        <span class="tag tag-land">📍 ${e.land}</span>
+                        ${e.regions.map(r => `<span class="tag tag-region">🏛️ ${r}</span>`).join(' ')}
+                    </div>
+                    <h4 style="margin: 5px 0;">${e.title}</h4>
+                    <p style="margin: 0; font-size: 13px; color: #666;">${e.desc || '無詳細說明'}</p>
+                </div>
+            `).join('');
+        }
+
+        modal.style.display = 'flex';
+    }
+
+    function openLineageModal(landName) {
+        const modal = document.getElementById('lineageModal');
+        const modalTitle = document.getElementById('lineageModalTitle');
+        const modalBody = document.getElementById('lineageModalBody');
+
+        modalTitle.innerText = `🗺️ 【${landName}】土地政權歷史演變`;
+
+        const landPeriods = window.periods.filter(p => p.land === landName)
+            .sort((a, b) => getExactSortValue(a.startEra, a.startYear, a.startMonth, a.startDay) - getExactSortValue(b.startEra, b.startYear, b.startMonth, b.startDay));
+
+        if (landPeriods.length === 0) {
+            modalBody.innerHTML = '<p>該土地目前尚未設定任何統治政權或歷史時期。</p>';
+        } else {
+            modalBody.innerHTML = landPeriods.map(p => `
+                <div class="lineage-step">
+                    <div style="font-size: 12px; color: var(--land-color); font-weight: bold;">
+                        ${formatDate(p.startEra, p.startYear, p.startMonth, p.startDay)} ~ ${formatDate(p.endEra, p.endYear, p.endMonth, p.endDay)}
+                    </div>
+                    <h4 style="margin: 3px 0; color: var(--primary);">🏛️ ${p.regions.join(', ')} — ${p.name}</h4>
+                    <p style="margin: 0; font-size: 13px; color: #555;">${p.desc || '無簡介'}</p>
+                </div>
+            `).join('');
+        }
+
+        modal.style.display = 'flex';
+    }
 </script>
 
 </body>
