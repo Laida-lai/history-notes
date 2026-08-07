@@ -359,7 +359,7 @@
     <!-- 頁籤選擇 -->
     <div class="tab-buttons">
         <button class="tab-btn active" onclick="switchTab('event')">📍 新增具體事件</button>
-        <button class="tab-btn" onclick="switchTab('period')">⏳ 新增政權 / 歷史時期</button>
+        <button class="tab-btn" onclick="switchTab('period')">⏳ 新增歷史時期</button>
     </div>
 
     <datalist id="regionList"></datalist>
@@ -397,7 +397,7 @@
                 <option value="AUTO">✨ 自動歸類（依政權與時間比對時期）</option>
                 <option value="NONE">-- 不設為任何時期 --</option>
             </select>
-            <input type="text" id="title" class="full-width" placeholder="事件名稱 (如: 第二次世界大戰)" required>
+            <input type="text" id="title" class="full-width" placeholder="歷史事件名稱 (如: 第二次世界大戰)" required>
             <textarea id="description" class="full-width" placeholder="詳細內容 / 歷史意義筆記 (例如戰場涵蓋範疇、受影響國家人口等)..."></textarea>
         </div>
         <div class="input-tip">💡 提示：跨國界或跨大洲重大事件，可以在「土地」欄位輸入多個地理區域（以逗點 `,` 或頓號 `、` 隔開），系統會自動拆分並記錄至各個土地脈絡中。</div>
@@ -406,11 +406,11 @@
 
     <!-- 新增歷史時期表單 -->
     <div class="form-card" id="form-period" style="display: none;">
-        <h3>新增政權 / 歷史時期 (長時間範圍)</h3>
+        <h3>新增歷史時期 (長時間範圍)</h3>
         <div class="form-grid">
-            <input type="text" id="p_land" name="land" class="full-width" list="saved-locations-list" placeholder="📍 地理土地/區域，可填多個 (如: 東歐平原, 莫斯科)" autocomplete="off" required>
-            <input type="text" id="p_region" class="full-width" list="regionList" placeholder="政權/國家名稱，可填多個 (如: 蘇聯, 俄羅斯)" required>
-            <input type="text" id="p_name" class="full-width" placeholder="時期/政權全稱 (如: 蘇維埃社會主義共和國聯盟時期)" required>
+            <input type="text" id="p_land" name="land" class="full-width" list="saved-locations-list" placeholder="📍 地理土地/區域，可填多個 (如:亞洲大陸、台灣島)" autocomplete="off" required>
+            <input type="text" id="p_region" class="full-width" list="regionList" placeholder="政權/國家名稱，可填多個 (如:台灣、日本)" required>
+            <input type="text" id="p_name" class="full-width" placeholder="歷史時期或是歷史事件 (如:第一次世界大戰、美援助台灣時期)" required>
             
             <select id="p_start_era">
                 <option value="CE">開始：西元 (CE)</option>
@@ -428,9 +428,9 @@
             <input type="number" id="p_end_month" min="1" max="12" placeholder="結束月份 (選填)">
             <input type="number" id="p_end_day" min="1" max="31" placeholder="結束日期 (選填)">
 
-            <textarea id="p_description" class="full-width" placeholder="該政權/時期的背景說明..."></textarea>
+            <textarea id="p_description" class="full-width" placeholder="該歷史時期或是歷史事件的背景說明..."></textarea>
         </div>
-        <button class="btn-add" style="background-color: var(--period-color);" onclick="addPeriod()">新增政權/歷史時期</button>
+        <button class="btn-add" style="background-color: var(--period-color);" onclick="addPeriod()">新增歷史時期</button>
     </div>
 
     <!-- 篩選與控制區 -->
@@ -536,10 +536,10 @@
             window.periods = (data.periods || []).map(normalizeItem);
             document.getElementById('lastSyncTime').innerText = `已於 ${new Date().toLocaleTimeString()} 同步`;
         } else {
-            // 預設範例資料：包含跨多個土地的第二次世界大戰範例
+            // 預設範例資料
             window.periods = [
                 { id: 101, lands: ['東歐平原/莫斯科', '歐洲大陸'], regions: ['俄羅斯帝國'], name: '沙皇俄國時期', startEra: 'CE', startYear: 1721, endEra: 'CE', endYear: 1917, desc: '羅曼諾夫王朝統治時期。' },
-                { id: 102, lands: ['東歐平原/莫斯科', '歐洲大陸', '亞洲大陸'], regions: ['蘇聯'], name: '蘇維埃社會主義共和國聯盟', startEra: 'CE', startYear: 1922, endEra: 'CE', endYear: 1991, desc: '世界上第一個社會主義國家。' }
+                { id: 102, lands: ['東歐平原/莫斯科', '歐洲大陸', '亞洲大陸'], regions: ['蘇聯'], name: '蘇維埃社會主義共和國聯盟時期', startEra: 'CE', startYear: 1922, endEra: 'CE', endYear: 1991, desc: '世界上第一個社會主義國家。' }
             ];
             window.events = [
                 { 
@@ -653,7 +653,7 @@
         const regions = parseMultiInput(regionInput, '未分類');
 
         if (!regions.length || !name || !startYear || !endYear) {
-            alert('請完整填寫政權/國家、時期名稱以及起訖年份！');
+            alert('請完整填寫政權/國家、名稱以及起訖年份！');
             return;
         }
 
@@ -695,7 +695,7 @@
         const regions = parseMultiInput(regionInput, '未分類');
 
         if (!year || !regions.length || !title) {
-            alert('請填寫年份、區域及事件名稱！');
+            alert('請填寫年份、區域及歷史事件名稱！');
             return;
         }
 
@@ -772,7 +772,7 @@
                     <input type="number" id="edit_month" value="${e.month || ''}" min="1" max="12" placeholder="月份">
                     <input type="number" id="edit_day" value="${e.day || ''}" min="1" max="31" placeholder="日期">
                     <select id="edit_belongPeriod" class="full-width">${periodOptions}</select>
-                    <input type="text" id="edit_title" class="full-width" value="${e.title}" placeholder="事件名稱" required>
+                    <input type="text" id="edit_title" class="full-width" value="${e.title}" placeholder="歷史事件名稱" required>
                     <textarea id="edit_desc" class="full-width" placeholder="詳細內容...">${e.desc || ''}</textarea>
                 </div>
                 <button class="btn-add" onclick="saveEdit('event', ${e.id})">儲存變更</button>
@@ -781,12 +781,12 @@
             const p = window.periods.find(item => item.id === id);
             if (!p) return;
 
-            modalTitle.innerText = '編輯歷史時期/政權';
+            modalTitle.innerText = '編輯歷史時期';
             modalBody.innerHTML = `
                 <div class="form-grid">
-                    <input type="text" id="edit_p_land" class="full-width" name="land" list="saved-locations-list" value="${(p.lands || []).join(', ')}" placeholder="📍 地理土地區域 (可用逗號分隔)" autocomplete="off" required>
-                    <input type="text" id="edit_p_region" class="full-width" list="regionList" value="${(p.regions || []).join(', ')}" placeholder="政權/國家名稱 (可用逗號分隔)" required>
-                    <input type="text" id="edit_p_name" class="full-width" value="${p.name}" placeholder="時期名稱" required>
+                    <input type="text" id="edit_p_land" class="full-width" name="land" list="saved-locations-list" value="${(p.lands || []).join(', ')}" placeholder="📍 地理土地/區域，可填多個 (如:亞洲大陸、台灣島)" autocomplete="off" required>
+                    <input type="text" id="edit_p_region" class="full-width" list="regionList" value="${(p.regions || []).join(', ')}" placeholder="政權/國家名稱，可填多個 (如:台灣、日本)" required>
+                    <input type="text" id="edit_p_name" class="full-width" value="${p.name}" placeholder="歷史時期或是歷史事件 (如:第一次世界大戰、美援助台灣時期)" required>
                     
                     <select id="edit_p_start_era">
                         <option value="CE" ${p.startEra === 'CE' ? 'selected' : ''}>開始：西元 (CE)</option>
@@ -804,7 +804,7 @@
                     <input type="number" id="edit_p_end_month" value="${p.endMonth || ''}" min="1" max="12" placeholder="結束月份">
                     <input type="number" id="edit_p_end_day" value="${p.endDay || ''}" min="1" max="31" placeholder="結束日期">
 
-                    <textarea id="edit_p_desc" class="full-width" placeholder="該時期的背景說明...">${p.desc || ''}</textarea>
+                    <textarea id="edit_p_desc" class="full-width" placeholder="該歷史時期或是歷史事件的背景說明...">${p.desc || ''}</textarea>
                 </div>
                 <button class="btn-add" style="background-color: var(--period-color);" onclick="saveEdit('period', ${p.id})">儲存變更</button>
             `;
@@ -829,7 +829,7 @@
             const regions = parseMultiInput(regionInput, '未分類');
 
             if (!year || !regions.length || !title) {
-                alert('請填寫年份、區域及事件名稱！');
+                alert('請填寫年份、區域及歷史事件名稱！');
                 return;
             }
 
@@ -868,7 +868,7 @@
             const regions = parseMultiInput(regionInput, '未分類');
 
             if (!regions.length || !name || !startYear || !endYear) {
-                alert('請完整填寫政權/國家、時期名稱以及起訖年份！');
+                alert('請完整填寫政權/國家、名稱以及起訖年份！');
                 return;
             }
 
@@ -928,7 +928,7 @@
         const timelineEl = document.getElementById('timeline');
         timelineEl.innerHTML = '';
 
-        // 多土地 / 多政權比對邏輯 (使用 Array.includes)
+        // 多土地 / 多政權比對邏輯
         let filteredEvents = window.events.filter(e => {
             const matchRegion = filterRegionValue === 'ALL' || (e.regions && e.regions.includes(filterRegionValue));
             const matchLand = filterLandValue === 'ALL' || (e.lands && e.lands.includes(filterLandValue));
@@ -941,7 +941,7 @@
             return matchRegion && matchLand;
         });
 
-        document.getElementById('totalStats').innerText = `目前顯示：${filteredEvents.length} 個事件，${filteredPeriods.length} 個時期/政權`;
+        document.getElementById('totalStats').innerText = `目前顯示：${filteredEvents.length} 個事件，${filteredPeriods.length} 個時期`;
 
         const items = [];
 
@@ -1004,7 +1004,7 @@
                     <div class="timeline-marker period-marker"></div>
                     <div class="timeline-content period-content">
                         <div class="tag-container">${landTagsHtml} ${regionTagsHtml}</div>
-                        <h4 class="event-title" style="color: var(--period-color);">⏳ 歷史時期：${p.name}</h4>
+                        <h4 class="event-title" style="color: var(--period-color);">⏳ 歷史時期/事件：${p.name}</h4>
                         <p class="event-desc">${p.desc || ''}</p>
                         <div style="display: flex; justify-content: flex-end; align-items: center; margin-top: 10px;">
                             <div class="action-btns">
@@ -1052,7 +1052,7 @@
         const modalTitle = document.getElementById('lineageModalTitle');
         const modalBody = document.getElementById('lineageModalBody');
 
-        modalTitle.innerText = `📍【${landName}】地理土地的歷史政權演變與重大事件`;
+        modalTitle.innerText = `📍【${landName}】地理土地的歷史演變與重大事件`;
 
         // 搜尋包含該土地的歷史時期
         const landPeriods = window.periods.filter(p => p.lands && p.lands.includes(landName))
@@ -1062,11 +1062,11 @@
         const landEvents = window.events.filter(e => e.lands && e.lands.includes(landName))
             .sort((a, b) => getExactSortValue(a.era, a.year, a.month, a.day) - getExactSortValue(b.era, b.year, b.month, b.day));
 
-        let htmlContent = `<p style="color: #666; font-size: 14px;">這塊土地歷史上經歷過以下政權與重大轉折：</p>`;
+        let htmlContent = `<p style="color: #666; font-size: 14px;">這塊土地歷史上經歷過以下時期與重大轉折：</p>`;
 
-        htmlContent += `<h4 style="color: var(--period-color); margin-top: 15px;">⏳ 歷代統治政權／時期流變：</h4>`;
+        htmlContent += `<h4 style="color: var(--period-color); margin-top: 15px;">⏳ 歷史時期流變：</h4>`;
         if (landPeriods.length === 0) {
-            htmlContent += '<p style="color: #999; font-size: 13px;">尚無記錄該土地的專屬政權時期。</p>';
+            htmlContent += '<p style="color: #999; font-size: 13px;">尚無記錄該土地的專屬歷史時期。</p>';
         } else {
             htmlContent += landPeriods.map(p => `
                 <div class="lineage-step">
