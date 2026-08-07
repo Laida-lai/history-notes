@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>全景世界歷史時間軸筆記 - 雲端同步版</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #e74c3c;
+            --period-color: #3498db;
+            --bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --border: #e0e0e0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg);
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+
+        /* 跨裝置同步狀態列 */
+        .sync-status-bar {
+            background: #eef2f7;
+            border: 1px solid #cbd5e1;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .status-dot {
+            height: 10px;
+            width: 10px;
+            background-color: #2eb85c;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+
+        /* 頁籤切換 */
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            background: #e0e0e0;
+            cursor: pointer;
+            border-radius: 6px 6px 0 0;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .tab-btn.active {
+            background: var(--card-bg);
+            color: var(--primary);
+            border-top: 3px solid var(--primary);
+        }
+
+        /* 輸入表單區 */
+        .form-card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 0 8px 8px 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        input, select, textarea {
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            height: 60px;
+        }
+
+        button.btn-add {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+
+        button.btn-add:hover {
+            opacity: 0.9;
+        }
+
+        /* 控制與篩選區 */
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        /* 時間軸主要呈現區 */
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 140px;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--primary);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .timeline-year {
+            width: 120px;
+            text-align: right;
+            font-weight: bold;
+            color: var(--accent);
+            padding-right: 20px;
+            font-size: 14px;
+            flex-shrink: 0;
+            line-height: 1.4;
+        }
+
+        .timeline-marker {
+            position: absolute;
+            left: 134px;
+            top: 5px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: 2px solid white;
+            z-index: 1;
+        }
+
+        .timeline-marker.period-marker {
+            background: var(--period-color);
+            border-radius: 3px;
+        }
+
+        .timeline-content {
+            margin-left: 30px;
+            background: var(--card-bg);
+            padding: 15px 20px;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            flex-grow: 1;
+            border-left: 4px solid var(--primary);
+        }
+
+        .timeline-content.period-content {
+            border-left-color: var(--period-color);
+            background: #f0f7fc;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            margin-right: 5px;
+        }
+
+        .tag-region { background: #eef2f7; color: var(--primary); }
+        .tag-period { background: #e1f5fe; color: #0288d1; }
+
+        .event-title {
+            font-size: 18px;
+            margin: 0 0 8px 0;
+        }
+
+        .event-desc {
+            color: #555;
+            font-size: 14px;
+            margin: 0 0 10px 0;
+            white-space: pre-line;
+        }
+
+        .btn-sync {
+            background: none;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .btn-sync:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-action {
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 12px;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+
+        .btn-edit { color: #2980b9; }
+        .btn-edit:hover { background: #ebf5fb; }
+        .btn-delete { color: #c0392b; }
+        .btn-delete:hover { background: #fdedec; }
+
+        /* 彈出視窗 (Modal) */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .close-btn {
+            cursor: pointer;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .world-event-card {
+            background: #f9f9f9;
+            border-left: 3px solid #3498db;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            border-radius: 0 4px 4px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>全景世界歷史時間軸筆記</h1>
+
+    <!-- 雲端同步狀態欄 -->
+    <div class="sync-status-bar">
+        <div>
+            <span class="status-dot"></span>
+            <b>Firebase 雲端即時同步中</b>
+        </div>
+        <div id="lastSyncTime" style="color: #666;">載入連線中...</div>
+    </div>
+
+    <!-- 頁籤選擇 -->
+    <div class="tab-buttons">
+        <button class="tab-btn active" onclick="switchTab('event')">📍 新增具體事件</button>
+        <button class="tab-btn" onclick="switchTab('period')">⏳ 新增歷史時期</button>
+    </div>
+
+    <datalist id="regionList"></datalist>
+
+    <!-- 新增事件表單 -->
+    <div class="form-card" id="form-event">
+        <h3>新增歷史事件</h3>
+        <div class="form-grid">
+            <select id="era">
+                <option value="CE">西元 (CE)</option>
+                <option value="BCE">西元前 (BCE)</option>
+            </select>
+            <input type="number" id="year" placeholder="年份 (如: 1930)" required>
+            <input type="number" id="month" min="1" max="12" placeholder="月份 (選填)">
+            <input type="number" id="day" min="1" max="31" placeholder="日期 (選填)">
+            <input type="text" id="region" list="regionList" placeholder="國家 / 區域 (如: 台灣)" required>
+            <select id="belongPeriod" class="full-width">
+                <option value="AUTO">✨ 自動歸類（依國家與時間比對時期）</option>
+                <option value="NONE">-- 不設為任何時期 --</option>
+            </select>
+            <input type="text" id="title" class="full-width" placeholder="事件名稱 (如: 霧社事件)" required>
+            <textarea id="description" class="full-width" placeholder="詳細內容 / 歷史意義筆記..."></textarea>
+        </div>
+        <button class="btn-add" onclick="addEvent()">新增事件至時間軸</button>
+    </div>
+
+    <!-- 新增歷史時期表單 -->
+    <div class="form-card" id="form-period" style="display: none;">
+        <h3>新增歷史時期/時代 (長時間範圍)</h3>
+        <div class="form-grid">
+            <input type="text" id="p_region" list="regionList" placeholder="國家 / 區域 (如: 台灣)" required>
+            <input type="text" id="p_name" placeholder="時期名稱" required>
+            
+            <select id="p_start_era">
+                <option value="CE">開始：西元 (CE)</option>
+                <option value="BCE">開始：西元前 (BCE)</option>
+            </select>
+            <input type="number" id="p_start_year" placeholder="開始年份 (必填)" required>
+            <input type="number" id="p_start_month" min="1" max="12" placeholder="開始月份 (選填)">
+            <input type="number" id="p_start_day" min="1" max="31" placeholder="開始日期 (選填)">
+
+            <select id="p_end_era">
+                <option value="CE">結束：西元 (CE)</option>
+                <option value="BCE">結束：西元前 (BCE)</option>
+            </select>
+            <input type="number" id="p_end_year" placeholder="結束年份 (必填)" required>
+            <input type="number" id="p_end_month" min="1" max="12" placeholder="結束月份 (選填)">
+            <input type="number" id="p_end_day" min="1" max="31" placeholder="結束日期 (選填)">
+
+            <textarea id="p_description" class="full-width" placeholder="該時期的背景說明 / 特點總結..."></textarea>
+        </div>
+        <button class="btn-add" style="background-color: var(--period-color);" onclick="addPeriod()">新增歷史時期</button>
+    </div>
+
+    <!-- 篩選與控制區 -->
+    <div class="controls">
+        <div>
+            <label><b>檢視區域：</b></label>
+            <select id="filterRegion" onchange="renderTimeline()">
+                <option value="ALL">全覽（全世界模式）</option>
+            </select>
+        </div>
+        <div id="totalStats" style="color: #666; font-size: 14px;">資料載入中...</div>
+    </div>
+
+    <!-- 時間軸主體 -->
+    <div class="timeline" id="timeline"></div>
+</div>
+
+<!-- 同時間全世界事件彈出視窗 -->
+<div class="modal" id="syncModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitle">同時間的世界</h3>
+            <span class="close-btn" onclick="closeModal('syncModal')">&times;</span>
+        </div>
+        <div id="modalBody"></div>
+    </div>
+</div>
+
+<!-- 編輯歷史項目彈出視窗 -->
+<div class="modal" id="editModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="editModalTitle">編輯歷史紀錄</h3>
+            <span class="close-btn" onclick="closeModal('editModal')">&times;</span>
+        </div>
+        <div id="editModalBody"></div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // 整合你的 Firebase 金鑰設定
+    const firebaseConfig = {
+        apiKey: "AIzaSyAshJ9tBhLCuRWt6b2Cbi7NYHQa2S-HVA4",
+        authDomain: "timeline-notebook.firebaseapp.com",
+        projectId: "timeline-notebook",
+        storageBucket: "timeline-notebook.firebasestorage.app",
+        messagingSenderId: "376838977118",
+        appId: "1:376838977118:web:e7af8292f5acaf5a2d26cf",
+        measurementId: "G-4675HKBB72"
+    };
+
+    // 初始化 Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const docRef = doc(db, "history_timeline", "main_data");
+
+    // 全域變數供頁面互動使用
+    window.events = [];
+    window.periods = [];
+
+    // 即時監聽雲端資料庫變更
+    onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            window.events = data.events || [];
+            window.periods = data.periods || [];
+            document.getElementById('lastSyncTime').innerText = `已於 ${new Date().toLocaleTimeString()} 同步`;
+        } else {
+            // 若為全新資料庫，寫入預設範例資料
+            window.periods = [
+                { id: 101, region: '台灣', name: '戒嚴時期', startEra: 'CE', startYear: 1949, startMonth: 5, startDay: 20, endEra: 'CE', endYear: 1987, endMonth: 7, endDay: 15, desc: '台灣歷史上的長達38年的戒嚴時期。' }
+            ];
+            window.events = [
+                { id: 1, type: 'event', era: 'CE', year: 1979, month: 12, day: 10, region: '台灣', periodId: 101, isAutoPeriod: true, title: '美麗島事件', desc: '高雄市發生的一場重大黨外民主運動事件。' }
+            ];
+            saveToCloud();
+        }
+        updateDropdowns();
+        renderTimeline();
+    }, (error) => {
+        console.error("Firestore 監聽失敗:", error);
+        document.getElementById('lastSyncTime').innerText = "連線失敗，請確認 Firebase 規則設定";
+    });
+
+    // 寫入雲端 Firestore 函式
+    window.saveToCloud = async function() {
+        try {
+            await setDoc(docRef, {
+                events: window.events,
+                periods: window.periods,
+                updatedAt: new Date().toISOString()
+            });
+        } catch (e) {
+            console.error("雲端儲存錯誤:", e);
+            alert("雲端儲存失敗，請檢查網路連線或 Firestore 安全規則 (Rules) 是否已開啟寫入權限！");
+        }
+    };
+</script>
+
+<script>
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById('form-event').style.display = 'none';
+        document.getElementById('form-period').style.display = 'none';
+
+        if (tab === 'event') {
+            document.querySelectorAll('.tab-btn')[0].classList.add('active');
+            document.getElementById('form-event').style.display = 'block';
+        } else {
+            document.querySelectorAll('.tab-btn')[1].classList.add('active');
+            document.getElementById('form-period').style.display = 'block';
+        }
+    }
+
+    function getExactSortValue(era, year, month = 1, day = 1) {
+        const m = (month || 1).toString().padStart(2, '0');
+        const d = (day || 1).toString().padStart(2, '0');
+        const num = parseFloat(`${Math.abs(year)}.${m}${d}`);
+        return era === 'BCE' ? -num : num;
+    }
+
+    function autoMatchPeriod(region, era, year, month, day) {
+        const eventVal = getExactSortValue(era, year, month, day);
+        const match = window.periods.find(p => {
+            if (p.region !== region) return false;
+            const startVal = getExactSortValue(p.startEra, p.startYear, p.startMonth, p.startDay);
+            const endVal = getExactSortValue(p.endEra, p.endYear, p.endMonth, p.endDay);
+            return eventVal >= startVal && eventVal <= endVal;
+        });
+        return match ? match.id : null;
+    }
+
+    function recheckAutoPeriods() {
+        window.events.forEach(e => {
+            if (e.isAutoPeriod) {
+                e.periodId = autoMatchPeriod(e.region, e.era, e.year, e.month, e.day);
+            }
+        });
+    }
+
+    function formatDate(era, year, month, day) {
+        let str = era === 'BCE' ? `西元前 ${year} 年` : `西元 ${year} 年`;
+        if (month) str += ` ${month} 月`;
+        if (day) str += ` ${day} 日`;
+        return str;
+    }
+
+    function addPeriod() {
+        const region = document.getElementById('p_region').value.trim();
+        const name = document.getElementById('p_name').value.trim();
+        const startEra = document.getElementById('p_start_era').value;
+        const startYear = parseInt(document.getElementById('p_start_year').value);
+        const startMonth = parseInt(document.getElementById('p_start_month').value) || null;
+        const startDay = parseInt(document.getElementById('p_start_day').value) || null;
+
+        const endEra = document.getElementById('p_end_era').value;
+        const endYear = parseInt(document.getElementById('p_end_year').value);
+        const endMonth = parseInt(document.getElementById('p_end_month').value) || null;
+        const endDay = parseInt(document.getElementById('p_end_day').value) || null;
+
+        const desc = document.getElementById('p_description').value.trim();
+
+        if (!region || !name || !startYear || !endYear) {
+            alert('請完整填寫國家/區域、時期名稱以及起訖年份！');
+            return;
+        }
+
+        window.periods.push({
+            id: Date.now(),
+            region, name,
+            startEra, startYear, startMonth, startDay,
+            endEra, endYear, endMonth, endDay,
+            desc
+        });
+
+        recheckAutoPeriods();
+        window.saveToCloud();
+
+        document.getElementById('p_region').value = '';
+        document.getElementById('p_name').value = '';
+        document.getElementById('p_start_year').value = '';
+        document.getElementById('p_start_month').value = '';
+        document.getElementById('p_start_day').value = '';
+        document.getElementById('p_end_year').value = '';
+        document.getElementById('p_end_month').value = '';
+        document.getElementById('p_end_day').value = '';
+        document.getElementById('p_description').value = '';
+    }
+
+    function addEvent() {
+        const era = document.getElementById('era').value;
+        const year = parseInt(document.getElementById('year').value);
+        const month = parseInt(document.getElementById('month').value) || null;
+        const day = parseInt(document.getElementById('day').value) || null;
+        const region = document.getElementById('region').value.trim();
+        const belongPeriodValue = document.getElementById('belongPeriod').value;
+        const title = document.getElementById('title').value.trim();
+        const desc = document.getElementById('description').value.trim();
+
+        if (!year || !region || !title) {
+            alert('請填寫年份、區域及事件名稱！');
+            return;
+        }
+
+        let periodId = null;
+        let isAutoPeriod = false;
+
+        if (belongPeriodValue === 'AUTO') {
+            periodId = autoMatchPeriod(region, era, year, month, day);
+            isAutoPeriod = true;
+        } else if (belongPeriodValue !== 'NONE') {
+            periodId = parseInt(belongPeriodValue);
+            isAutoPeriod = false;
+        }
+
+        window.events.push({
+            id: Date.now(),
+            type: 'event',
+            era, year, month, day,
+            region,
+            periodId,
+            isAutoPeriod,
+            title, desc
+        });
+
+        window.saveToCloud();
+
+        document.getElementById('year').value = '';
+        document.getElementById('month').value = '';
+        document.getElementById('day').value = '';
+        document.getElementById('region').value = '';
+        document.getElementById('title').value = '';
+        document.getElementById('description').value = '';
+        document.getElementById('belongPeriod').value = 'AUTO';
+    }
+
+    function deleteItem(type, id) {
+        if (confirm('確定要刪除此項目嗎？')) {
+            if (type === 'period') {
+                window.periods = window.periods.filter(p => p.id !== id);
+                recheckAutoPeriods();
+            } else {
+                window.events = window.events.filter(e => e.id !== id);
+            }
+            window.saveToCloud();
+        }
+    }
+
+    function openEditModal(type, id) {
+        const modal = document.getElementById('editModal');
+        const modalTitle = document.getElementById('editModalTitle');
+        const modalBody = document.getElementById('editModalBody');
+
+        if (type === 'event') {
+            const e = window.events.find(item => item.id === id);
+            if (!e) return;
+
+            modalTitle.innerText = '編輯歷史事件';
+            let periodOptions = `<option value="AUTO" ${e.isAutoPeriod ? 'selected' : ''}>✨ 自動歸類（依國家與時間比對時期）</option><option value="NONE" ${!e.isAutoPeriod && !e.periodId ? 'selected' : ''}>-- 不設為任何時期 --</option>`;
+            window.periods.forEach(p => {
+                const selected = (!e.isAutoPeriod && e.periodId === p.id) ? 'selected' : '';
+                periodOptions += `<option value="${p.id}" ${selected}>手動指定：${p.region} - ${p.name}</option>`;
+            });
+
+            modalBody.innerHTML = `
+                <div class="form-grid">
+                    <select id="edit_era">
+                        <option value="CE" ${e.era === 'CE' ? 'selected' : ''}>西元 (CE)</option>
+                        <option value="BCE" ${e.era === 'BCE' ? 'selected' : ''}>西元前 (BCE)</option>
+                    </select>
+                    <input type="number" id="edit_year" value="${e.year}" placeholder="年份" required>
+                    <input type="number" id="edit_month" value="${e.month || ''}" min="1" max="12" placeholder="月份">
+                    <input type="number" id="edit_day" value="${e.day || ''}" min="1" max="31" placeholder="日期">
+                    <input type="text" id="edit_region" list="regionList" value="${e.region}" placeholder="國家 / 區域" required>
+                    <select id="edit_belongPeriod" class="full-width">${periodOptions}</select>
+                    <input type="text" id="edit_title" class="full-width" value="${e.title}" placeholder="事件名稱" required>
+                    <textarea id="edit_desc" class="full-width" placeholder="詳細內容...">${e.desc || ''}</textarea>
+                </div>
+                <button class="btn-add" onclick="saveEdit('event', ${e.id})">儲存變更</button>
+            `;
+        } else {
+            const p = window.periods.find(item => item.id === id);
+            if (!p) return;
+
+            modalTitle.innerText = '編輯歷史時期';
+            modalBody.innerHTML = `
+                <div class="form-grid">
+                    <input type="text" id="edit_p_region" list="regionList" value="${p.region}" placeholder="國家 / 區域" required>
+                    <input type="text" id="edit_p_name" value="${p.name}" placeholder="時期名稱" required>
+                    
+                    <select id="edit_p_start_era">
+                        <option value="CE" ${p.startEra === 'CE' ? 'selected' : ''}>開始：西元 (CE)</option>
+                        <option value="BCE" ${p.startEra === 'BCE' ? 'selected' : ''}>開始：西元前 (BCE)</option>
+                    </select>
+                    <input type="number" id="edit_p_start_year" value="${p.startYear}" placeholder="開始年份" required>
+                    <input type="number" id="edit_p_start_month" value="${p.startMonth || ''}" min="1" max="12" placeholder="開始月份">
+                    <input type="number" id="edit_p_start_day" value="${p.startDay || ''}" min="1" max="31" placeholder="開始日期">
+
+                    <select id="edit_p_end_era">
+                        <option value="CE" ${p.endEra === 'CE' ? 'selected' : ''}>結束：西元 (CE)</option>
+                        <option value="BCE" ${p.endEra === 'BCE' ? 'selected' : ''}>結束：西元前 (BCE)</option>
+                    </select>
+                    <input type="number" id="edit_p_end_year" value="${p.endYear}" placeholder="結束年份" required>
+                    <input type="number" id="edit_p_end_month" value="${p.endMonth || ''}" min="1" max="12" placeholder="結束月份">
+                    <input type="number" id="edit_p_end_day" value="${p.endDay || ''}" min="1" max="31" placeholder="結束日期">
+
+                    <textarea id="edit_p_desc" class="full-width" placeholder="該時期的背景說明...">${p.desc || ''}</textarea>
+                </div>
+                <button class="btn-add" style="background-color: var(--period-color);" onclick="saveEdit('period', ${p.id})">儲存變更</button>
+            `;
+        }
+
+        modal.style.display = 'flex';
+    }
+
+    function saveEdit(type, id) {
+        if (type === 'event') {
+            const era = document.getElementById('edit_era').value;
+            const year = parseInt(document.getElementById('edit_year').value);
+            const month = parseInt(document.getElementById('edit_month').value) || null;
+            const day = parseInt(document.getElementById('edit_day').value) || null;
+            const region = document.getElementById('edit_region').value.trim();
+            const belongPeriodValue = document.getElementById('edit_belongPeriod').value;
+            const title = document.getElementById('edit_title').value.trim();
+            const desc = document.getElementById('edit_desc').value.trim();
+
+            if (!year || !region || !title) {
+                alert('請填寫年份、區域及事件名稱！');
+                return;
+            }
+
+            let periodId = null;
+            let isAutoPeriod = false;
+
+            if (belongPeriodValue === 'AUTO') {
+                periodId = autoMatchPeriod(region, era, year, month, day);
+                isAutoPeriod = true;
+            } else if (belongPeriodValue !== 'NONE') {
+                periodId = parseInt(belongPeriodValue);
+                isAutoPeriod = false;
+            }
+
+            const idx = window.events.findIndex(e => e.id === id);
+            if (idx !== -1) {
+                window.events[idx] = { ...window.events[idx], era, year, month, day, region, periodId, isAutoPeriod, title, desc };
+            }
+        } else {
+            const region = document.getElementById('edit_p_region').value.trim();
+            const name = document.getElementById('edit_p_name').value.trim();
+            const startEra = document.getElementById('edit_p_start_era').value;
+            const startYear = parseInt(document.getElementById('edit_p_start_year').value);
+            const startMonth = parseInt(document.getElementById('edit_p_start_month').value) || null;
+            const startDay = parseInt(document.getElementById('edit_p_start_day').value) || null;
+
+            const endEra = document.getElementById('edit_p_end_era').value;
+            const endYear = parseInt(document.getElementById('edit_p_end_year').value);
+            const endMonth = parseInt(document.getElementById('edit_p_end_month').value) || null;
+            const endDay = parseInt(document.getElementById('edit_p_end_day').value) || null;
+
+            const desc = document.getElementById('edit_p_desc').value.trim();
+
+            if (!region || !name || !startYear || !endYear) {
+                alert('請完整填寫國家/區域、時期名稱以及起訖年份！');
+                return;
+            }
+
+            const idx = window.periods.findIndex(p => p.id === id);
+            if (idx !== -1) {
+                window.periods[idx] = { ...window.periods[idx], region, name, startEra, startYear, startMonth, startDay, endEra, endYear, endMonth, endDay, desc };
+            }
+
+            recheckAutoPeriods();
+        }
+
+        window.saveToCloud();
+        closeModal('editModal');
+    }
+
+    function updateDropdowns() {
+        const filterSelect = document.getElementById('filterRegion');
+        const currentFilter = filterSelect.value;
+        
+        const allRegions = [...new Set([...window.events.map(e => e.region), ...window.periods.map(p => p.region)])].filter(Boolean);
+
+        filterSelect.innerHTML = '<option value="ALL">全覽（全世界模式）</option>';
+        allRegions.forEach(r => {
+            filterSelect.innerHTML += `<option value="${r}">${r}</option>`;
+        });
+        filterSelect.value = currentFilter;
+
+        const regionDatalist = document.getElementById('regionList');
+        regionDatalist.innerHTML = '';
+        allRegions.forEach(r => {
+            regionDatalist.innerHTML += `<option value="${r}"></option>`;
+        });
+
+        const periodSelect = document.getElementById('belongPeriod');
+        periodSelect.innerHTML = `
+            <option value="AUTO">✨ 自動歸類（依國家與時間比對時期）</option>
+            <option value="NONE">-- 不設為任何時期 --</option>
+        `;
+        window.periods.forEach(p => {
+            periodSelect.innerHTML += `<option value="${p.id}">手動指定：${p.region} - ${p.name} (${formatDate(p.startEra, p.startYear, p.startMonth, p.startDay)} ~ ${formatDate(p.endEra, p.endYear, p.endMonth, p.endDay)})</option>`;
+        });
+    }
+
+    function renderTimeline() {
+        const timeline = document.getElementById('timeline');
+        const filter = document.getElementById('filterRegion').value;
+
+        let listItems = [];
+
+        window.periods.forEach(p => {
+            listItems.push({
+                itemType: 'period',
+                sortVal: getExactSortValue(p.startEra, p.startYear, p.startMonth, p.startDay),
+                data: p
+            });
+        });
+
+        window.events.forEach(e => {
+            listItems.push({
+                itemType: 'event',
+                sortVal: getExactSortValue(e.era, e.year, e.month, e.day),
+                data: e
+            });
+        });
+
+        listItems.sort((a, b) => a.sortVal - b.sortVal);
+
+        if (filter !== 'ALL') {
+            listItems = listItems.filter(item => item.data.region === filter);
+        }
+
+        document.getElementById('totalStats').innerText = `已記錄 ${listItems.length} 個歷史項目`;
+        timeline.innerHTML = '';
+
+        if (listItems.length === 0) {
+            timeline.innerHTML = '<p style="text-align:center; color:#888;">尚無相關歷史紀錄</p>';
+            return;
+        }
+
+        listItems.forEach(item => {
+            if (item.itemType === 'period') {
+                const p = item.data;
+                const subEvents = window.events.filter(e => e.periodId === p.id);
+
+                const html = `
+                    <div class="timeline-item">
+                        <div class="timeline-year">
+                            ${formatDate(p.startEra, p.startYear, p.startMonth, p.startDay)}<br>至<br>${formatDate(p.endEra, p.endYear, p.endMonth, p.endDay)}
+                        </div>
+                        <div class="timeline-marker period-marker"></div>
+                        <div class="timeline-content period-content">
+                            <span class="tag tag-region">${p.region}</span>
+                            <span class="tag tag-period">⏳ 歷史時期</span>
+                            <h4 class="event-title">${p.name}</h4>
+                            <p class="event-desc">${p.desc || '無備註說明'}</p>
+                            ${subEvents.length > 0 ? `<div style="font-size:12px; color:#555; background:#fff; padding:8px; border-radius:4px; margin-bottom:8px;">
+                                <b>此時期下記載的事件 (${subEvents.length})：</b><br>
+                                ${subEvents.map(se => `• ${formatDate(se.era, se.year, se.month, se.day)}：${se.title}`).join('<br>')}
+                            </div>` : ''}
+                            <div style="text-align:right;" class="action-btns">
+                                <button class="btn-action btn-edit" onclick="openEditModal('period', ${p.id})">✏️ 編輯</button>
+                                <button class="btn-action btn-delete" onclick="deleteItem('period', ${p.id})">🗑️ 刪除</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                timeline.innerHTML += html;
+            } else {
+                const e = item.data;
+                const parentPeriod = window.periods.find(p => p.id === e.periodId);
+                const sameYearEventsCount = window.events.filter(ev => ev.era === e.era && ev.year === e.year).length;
+
+                const html = `
+                    <div class="timeline-item">
+                        <div class="timeline-year">${formatDate(e.era, e.year, e.month, e.day)}</div>
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <span class="tag tag-region">${e.region}</span>
+                            ${parentPeriod ? `<span class="tag tag-period">屬於：${parentPeriod.name}${e.isAutoPeriod ? ' (自動)' : ''}</span>` : ''}
+                            <h4 class="event-title">${e.title}</h4>
+                            <p class="event-desc">${e.desc || '無詳細說明'}</p>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <button class="btn-sync" onclick="showWorldContext('${e.era}', ${e.year})">
+                                    🌍 檢視同年全世界發生的事 (${sameYearEventsCount})
+                                </button>
+                                <div class="action-btns">
+                                    <button class="btn-action btn-edit" onclick="openEditModal('event', ${e.id})">✏️ 編輯</button>
+                                    <button class="btn-action btn-delete" onclick="deleteItem('event', ${e.id})">🗑️ 刪除</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                timeline.innerHTML += html;
+            }
+        });
+    }
+
+    function showWorldContext(era, year) {
+        const sameYearEvents = window.events.filter(e => e.era === era && e.year === year);
+        const activePeriods = window.periods.filter(p => {
+            const start = getExactSortValue(p.startEra, p.startYear, p.startMonth, p.startDay);
+            const end = getExactSortValue(p.endEra, p.endYear, p.endMonth, p.endDay);
+            const current = getExactSortValue(era, year);
+            return current >= start && current <= end;
+        });
+
+        const modal = document.getElementById('syncModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalBody = document.getElementById('modalBody');
+
+        modalTitle.innerText = `【${era === 'BCE' ? '西元前 ' + year : '西元 ' + year} 年】全球歷史視角`;
+        modalBody.innerHTML = '';
+
+        let content = `<h4>📍 同年發生的具體事件 (${sameYearEvents.length})：</h4>`;
+        if (sameYearEvents.length > 0) {
+            sameYearEvents.forEach(e => {
+                content += `
+                    <div class="world-event-card">
+                        <div style="font-weight:bold; color:var(--primary);">${e.region} (${formatDate(e.era, e.year, e.month, e.day)})</div>
+                        <div style="font-size:15px; margin: 2px 0;"><b>${e.title}</b></div>
+                        <div style="font-size:13px; color:#555;">${e.desc || '無詳細說明'}</div>
+                    </div>
+                `;
+            });
+        } else {
+            content += `<p style="color:#888; font-size:13px;">該年份尚無其他獨立事件紀錄。</p>`;
+        }
+
+        content += `<h4 style="margin-top:20px;">⏳ 當時全球正處於哪些歷史時期 (${activePeriods.length})：</h4>`;
+        if (activePeriods.length > 0) {
+            activePeriods.forEach(p => {
+                content += `
+                    <div class="world-event-card" style="border-left-color: var(--period-color);">
+                        <div style="font-weight:bold; color:var(--period-color);">${p.region}</div>
+                        <div style="font-size:15px; margin: 2px 0;"><b>${p.name}</b> (${formatDate(p.startEra, p.startYear, p.startMonth, p.startDay)} ~ ${formatDate(p.endEra, p.endYear, p.endMonth, p.endDay)})</div>
+                        <div style="font-size:13px; color:#555;">${p.desc || ''}</div>
+                    </div>
+                `;
+            });
+        } else {
+            content += `<p style="color:#888; font-size:13px;">該年份尚無涵蓋的歷史時期紀錄。</p>`;
+        }
+
+        modalBody.innerHTML = content;
+        modal.style.display = 'flex';
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+</script>
+
+</body>
+</html>
