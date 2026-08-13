@@ -2,323 +2,314 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>全景世界歷史時間軸筆記 - 多土地多政權脈絡版</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>歷史時間軸筆記本</title>
+    <!-- Chart.js 與繪圖模組 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    
     <style>
         :root {
-            --primary: #2c3e50;
-            --accent: #e74c3c;
-            --period-color: #3498db;
-            --person-color: #8e44ad;
-            --land-color: #27ae60;
-            --bg: #f8f9fa;
+            --bg-color: #f4f6f8;
             --card-bg: #ffffff;
-            --border: #e0e0e0;
+            --border-color: #e2e8f0;
+            --text-primary: #2d3748;
+            --text-secondary: #718096;
+            --btn-active: #2d3748;
+            --btn-inactive: #e2e8f0;
+            --accent-red: #d9534f;
+            --tag-land-bg: #e6f4ea;
+            --tag-land-text: #137333;
+            --tag-regime-bg: #e8f0fe;
+            --tag-regime-text: #1a73e8;
+            --period-color: #4a90e2;
+            --person-color: #8e44ad;
         }
+
+        * { box-sizing: border-box; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: var(--bg);
-            color: #333;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
             margin: 0;
             padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .container {
-            max-width: 1000px;
-            margin: 0 auto;
+            width: 100%;
+            max-width: 1100px;
         }
 
-        h1 {
+        header {
             text-align: center;
-            color: var(--primary);
             margin-bottom: 20px;
         }
 
-        .sync-status-bar {
-            background: #eef2f7;
-            border: 1px solid #cbd5e1;
-            padding: 10px 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 14px;
+        .sync-status {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
         }
 
-        .status-dot {
-            height: 10px;
-            width: 10px;
-            background-color: #2eb85c;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 6px;
-        }
-
+        /* 頂部 Tab 切換按鈕 */
         .tab-buttons {
             display: flex;
             gap: 10px;
             margin-bottom: 15px;
-            flex-wrap: wrap;
         }
 
         .tab-btn {
-            padding: 10px 20px;
+            padding: 10px 18px;
             border: none;
-            background: #e0e0e0;
-            cursor: pointer;
-            border-radius: 6px 6px 0 0;
+            border-radius: 6px;
+            background: #e2e8f0;
+            color: #4a5568;
             font-weight: bold;
-            color: #555;
-            transition: all 0.2s ease;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .tab-btn.active {
-            background: var(--card-bg);
-            color: var(--primary);
-            border-top: 3px solid var(--primary);
-        }
-
-        .form-card {
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: 0 8px 8px 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            margin-bottom: 30px;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 12px;
-            margin-bottom: 12px;
-        }
-
-        .full-width {
-            grid-column: 1 / -1;
-        }
-
-        input, select, textarea {
-            padding: 10px;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-            font-size: 14px;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        textarea {
-            height: 100px;
-        }
-
-        .input-tip {
-            font-size: 12px;
-            color: #666;
-            margin-top: -8px;
-            margin-bottom: 8px;
-        }
-
-        button.btn-add {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            width: 100%;
-        }
-
-        button.btn-add:hover {
-            opacity: 0.9;
-        }
-
-        .controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--card-bg);
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .controls-group {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .timeline {
-            position: relative;
-            padding: 20px 0;
-        }
-
-        .timeline::before {
-            content: '';
-            position: absolute;
-            left: 140px;
-            top: 0;
-            bottom: 0;
-            width: 4px;
-            background: var(--primary);
-        }
-
-        .timeline-item {
-            position: relative;
-            margin-bottom: 30px;
-            display: flex;
-            align-items: flex-start;
-        }
-
-        .timeline-year {
-            width: 120px;
-            text-align: right;
-            font-weight: bold;
-            color: var(--accent);
-            padding-right: 20px;
-            font-size: 13px;
-            flex-shrink: 0;
-            line-height: 1.4;
-        }
-
-        .timeline-marker {
-            position: absolute;
-            left: 134px;
-            top: 5px;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: var(--accent);
-            border: 2px solid white;
-            z-index: 1;
-        }
-
-        .timeline-marker.period-marker {
-            background: var(--period-color);
-            border-radius: 3px;
-        }
-
-        .timeline-marker.person-marker {
-            background: var(--person-color);
-            border-radius: 50%;
-        }
-
-        .timeline-content {
-            margin-left: 30px;
-            background: var(--card-bg);
-            padding: 15px 20px;
-            border-radius: 6px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            flex-grow: 1;
-            border-left: 4px solid var(--primary);
-        }
-
-        .timeline-content.period-content {
-            border-left-color: var(--period-color);
-            background: #f0f7fc;
-        }
-
-        .timeline-content.person-content {
-            border-left-color: var(--person-color);
-            background: #f8f0fc;
-        }
-
-        .tag-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-            margin-bottom: 8px;
-        }
-
-        .tag {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        .tag-region { background: #eef2f7; color: var(--primary); border: 1px solid #cbd5e1; }
-        .tag-land { background: #e8f8f0; color: #27ae60; border: 1px solid #a3e4d7; cursor: pointer; }
-        .tag-land:hover { background: #d1f2eb; }
-
-        .event-title {
-            font-size: 18px;
-            margin: 0 0 8px 0;
-        }
-
-        .event-desc {
-            color: #555;
-            font-size: 14px;
-            margin: 0 0 10px 0;
-            white-space: pre-line;
-        }
-
-        .action-btns {
-            display: flex;
-            gap: 10px;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 12px;
-        }
-
-        .action-right {
-            display: flex;
-            gap: 8px;
-        }
-
-        .btn-action {
-            border: none;
-            background: none;
-            cursor: pointer;
-            font-size: 12px;
-            padding: 2px 6px;
-            border-radius: 3px;
-        }
-
-        .btn-edit { color: #2980b9; border: 1px solid #2980b9; }
-        .btn-edit:hover { background: #ebf5fb; }
-        .btn-delete { color: #c0392b; border: 1px solid #c0392b; }
-        .btn-delete:hover { background: #fdedec; }
-
-        .btn-feature {
-            background: #fff;
-            border: 1px solid #e74c3c;
-            color: #d35400;
-            padding: 4px 10px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            transition: all 0.2s ease;
-        }
-
-        .btn-feature:hover {
-            background: #fdf2e9;
+            background: #ffffff;
+            color: #2d3748;
             box-shadow: 0 2px 4px rgba(0,0,0,0.08);
         }
 
-        .duration-badge {
-            display: block;
-            margin-top: 4px;
-            font-size: 11px;
-            font-weight: bold;
-            color: #27ae60;
-            background: #e8f8f0;
-            padding: 2px 6px;
-            border-radius: 4px;
-            border: 1px solid #a3e4d7;
-            text-align: center;
+        /* 表單區域卡片 */
+        .form-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            margin-bottom: 24px;
         }
 
+        .form-card h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 20px;
+            color: var(--text-primary);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .form-row input, .form-row select, .form-row textarea {
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-row input:focus, .form-row select:focus, .form-row textarea:focus {
+            border-color: #a0aec0;
+        }
+
+        .flex-1 { flex: 1; min-width: 120px; }
+        .full-width { width: 100%; }
+
+        textarea {
+            resize: vertical;
+            min-height: 90px;
+        }
+
+        .form-tip {
+            font-size: 13px;
+            color: #718096;
+            margin: 8px 0 16px 0;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: #2d3748;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .submit-btn:hover { background: #1a202c; }
+
+        /* 篩選器與統計卡片 */
+        .filter-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            margin-bottom: 24px;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-group label {
+            font-weight: bold;
+            font-size: 14px;
+            color: #2d3748;
+        }
+
+        .filter-group select {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: white;
+            font-size: 14px;
+        }
+
+        .stats-text {
+            font-size: 13px;
+            color: #718096;
+        }
+
+        /* 垂直時間軸視覺化樣式 */
+        .timeline-container {
+            position: relative;
+            padding: 10px 0;
+        }
+
+        .timeline-item {
+            display: flex;
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .timeline-left {
+            width: 160px;
+            padding-right: 20px;
+            text-align: right;
+            font-weight: bold;
+            color: var(--accent-red);
+            font-size: 13px;
+            line-height: 1.4;
+            flex-shrink: 0;
+        }
+
+        .timeline-spine {
+            position: relative;
+            width: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .timeline-spine::before {
+            content: '';
+            position: absolute;
+            top: 0; bottom: -24px;
+            width: 4px;
+            background: #3182ce;
+        }
+
+        .timeline-node {
+            width: 12px;
+            height: 12px;
+            background: #3182ce;
+            border-radius: 2px;
+            z-index: 1;
+            margin-top: 4px;
+        }
+
+        .timeline-content {
+            flex: 1;
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 16px 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            margin-left: 15px;
+            border-left: 4px solid #3182ce;
+        }
+
+        /* 標籤 Tag 樣式 */
+        .tag-group {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+
+        .tag-item {
+            font-size: 12px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 500;
+        }
+
+        .tag-item.land {
+            background: var(--tag-land-bg);
+            color: var(--tag-land-text);
+        }
+
+        .tag-item.regime {
+            background: var(--tag-regime-bg);
+            color: var(--tag-regime-text);
+        }
+
+        .timeline-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+
+        .timeline-desc {
+            font-size: 14px;
+            color: #4a5568;
+            line-height: 1.6;
+            margin-bottom: 12px;
+            white-space: pre-line;
+        }
+
+        .btn-history {
+            background: #edf2f7;
+            color: #2d3748;
+            border: 1px solid #cbd5e0;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-history:hover {
+            background: #e2e8f0;
+        }
+
+        /* Modal 彈出視窗 */
         .modal {
             display: none;
             position: fixed;
@@ -326,205 +317,180 @@
             background: rgba(0,0,0,0.5);
             justify-content: center;
             align-items: center;
-            z-index: 100;
+            z-index: 1000;
         }
 
         .modal-content {
             background: white;
-            padding: 25px;
+            padding: 24px;
             border-radius: 8px;
             max-width: 650px;
             width: 90%;
             max-height: 85vh;
             overflow-y: auto;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 10px;
-            margin-bottom: 15px;
+            position: relative;
         }
 
         .close-btn {
+            position: absolute;
+            right: 18px; top: 18px;
             cursor: pointer;
-            font-size: 20px;
-            font-weight: bold;
+            font-size: 22px;
+            color: #a0aec0;
         }
 
-        .land-history-item {
-            position: relative;
-            padding-left: 15px;
-            margin-bottom: 15px;
-            border-left: 3px solid #3498db;
-        }
-        .land-history-time {
-            color: #e74c3c;
-            font-weight: bold;
-            font-size: 13px;
-        }
-        .land-history-title {
-            font-size: 15px;
-            font-weight: bold;
-            margin: 4px 0;
+        .world-history-card {
+            border-left: 4px solid #3182ce;
+            padding: 10px 14px;
+            margin-bottom: 10px;
+            background: #f7fafc;
+            border-radius: 0 6px 6px 0;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>全景世界歷史時間軸筆記</h1>
+    <header>
+        <div class="sync-status" id="lastSyncTime">雲端連線中...</div>
+    </header>
 
-    <div class="sync-status-bar">
-        <div>
-            <span class="status-dot"></span>
-            <b>Firebase 雲端即時同步中</b>
-        </div>
-        <div id="lastSyncTime" style="color: #666;">載入連線中...</div>
-    </div>
-
+    <!-- Tab 切換按鈕區 -->
     <div class="tab-buttons">
-        <button class="tab-btn active" onclick="switchTab('event')">📍 新增具體事件</button>
-        <button class="tab-btn" onclick="switchTab('period')">⏳ 新增歷史時期</button>
-        <button class="tab-btn" onclick="switchTab('person')">👤 新增人物生平</button>
+        <button class="tab-btn active" id="tabBtnEvent" onclick="switchTab('event')">📍 新增具體事件</button>
+        <button class="tab-btn" id="tabBtnPeriod" onclick="switchTab('period')">⏳ 新增歷史時期</button>
+        <button class="tab-btn" id="tabBtnPerson" onclick="switchTab('person')">👤 新增人物生平</button>
     </div>
 
-    <datalist id="regionList"></datalist>
-    <datalist id="saved-locations-list">
-        <option value="歐洲大陸"></option>
-        <option value="亞洲大陸"></option>
-        <option value="非洲大陸"></option>
-        <option value="大西洋"></option>
-        <option value="太平洋"></option>
-        <option value="印度洋"></option>
-        <option value="地中海"></option>
-        <option value="莫斯科/東歐平原"></option>
-        <option value="台灣"></option>
-        <option value="高雄市"></option>
-    </datalist>
+    <!-- 表單卡片區 -->
+    <div class="form-card">
+        <h2 id="formTitle">新增歷史事件</h2>
+        
+        <!-- 表單：新增事件 -->
+        <form id="formEvent" onsubmit="handleAddEvent(event)">
+            <div class="form-row">
+                <select id="eventEra" class="flex-1">
+                    <option value="CE">西元 (CE)</option>
+                    <option value="BCE">西元前 (BCE)</option>
+                </select>
+                <input type="number" id="eventYear" placeholder="年份 (如: 1939)" class="flex-1" required>
+                <input type="number" id="eventMonth" placeholder="月份 (選填)" class="flex-1">
+                <input type="number" id="eventDay" placeholder="日期 (選填)" class="flex-1">
+            </div>
+            <div class="form-row">
+                <input type="text" id="eventLands" placeholder="📍 地點或受影響的地理土地/區域 (如: 亞洲大陸, 太平洋)" class="full-width" required>
+            </div>
+            <div class="form-row">
+                <input type="text" id="eventRegions" placeholder="相關的政權/國家 (如: 美國, 納粹德國)" class="full-width">
+            </div>
+            <div class="form-row">
+                <input type="text" id="eventTitle" placeholder="歷史事件名稱 (如: 第二次世界大戰)" class="full-width" required>
+            </div>
+            <div class="form-row">
+                <textarea id="eventDesc" placeholder="詳細內容 / 歷史意義筆記..." class="full-width"></textarea>
+            </div>
+            <div class="form-tip">💡 提示：跨國界事件可輸入多個地理區域（以逗點 `,` 或頓號 `、` 隔開）。</div>
+            <button type="submit" class="submit-btn">新增事件至時間軸</button>
+        </form>
 
-    <!-- 事件表單 -->
-    <div class="form-card" id="form-event">
-        <h3>新增歷史事件</h3>
-        <div class="form-grid">
-            <select id="era">
-                <option value="CE">西元 (CE)</option>
-                <option value="BCE">西元前 (BCE)</option>
-            </select>
-            <input type="number" id="year" placeholder="年份 (如: 1939)" required>
-            <input type="number" id="month" min="1" max="12" placeholder="月份 (選填)">
-            <input type="number" id="day" min="1" max="31" placeholder="日期 (選填)">
-            
-            <input type="text" id="land" name="land" class="full-width" list="saved-locations-list" placeholder="📍 地點或受影響的地理土地/區域 (如: 亞洲大陸, 太平洋)" autocomplete="off" required>
-            <input type="text" id="region" class="full-width" list="regionList" placeholder="相關的政權/國家 (如: 美國, 納粹德國)" required>
-            
-            <input type="text" id="title" class="full-width" placeholder="歷史事件名稱 (如: 第二次世界大戰)" required>
-            <textarea id="description" class="full-width" placeholder="詳細內容 / 歷史意義筆記..."></textarea>
-        </div>
-        <div class="input-tip">💡 提示：跨國界事件可輸入多個地理區域（以逗點 `,` 或頓號 `、` 隔開）。</div>
-        <button class="btn-add" onclick="addEvent()">新增事件至時間軸</button>
+        <!-- 表單：新增時期 (預設隱藏) -->
+        <form id="formPeriod" style="display:none;" onsubmit="handleAddPeriod(event)">
+            <div class="form-row">
+                <select id="pStartEra" class="flex-1">
+                    <option value="CE">西元 (CE)</option>
+                    <option value="BCE">西元前 (BCE)</option>
+                </select>
+                <input type="number" id="pStartYear" placeholder="起始年份" class="flex-1" required>
+                <select id="pEndEra" class="flex-1">
+                    <option value="CE">西元 (CE)</option>
+                    <option value="BCE">西元前 (BCE)</option>
+                </select>
+                <input type="number" id="pEndYear" placeholder="結束年份" class="flex-1" required>
+            </div>
+            <div class="form-row">
+                <input type="text" id="pLands" placeholder="📍 地點或涵蓋地理土地/區域" class="full-width" required>
+            </div>
+            <div class="form-row">
+                <input type="text" id="pRegions" placeholder="涵蓋政權/王朝" class="full-width">
+            </div>
+            <div class="form-row">
+                <input type="text" id="pName" placeholder="時期名稱 (如: 冷戰時期)" class="full-width" required>
+            </div>
+            <div class="form-row">
+                <textarea id="pDesc" placeholder="時期時代特徵背景說明..." class="full-width"></textarea>
+            </div>
+            <button type="submit" class="submit-btn">新增時期至時間軸</button>
+        </form>
+
+        <!-- 表單：新增人物 (預設隱藏) -->
+        <form id="formPerson" style="display:none;" onsubmit="handleAddPerson(event)">
+            <div class="form-row">
+                <select id="perStartEra" class="flex-1">
+                    <option value="CE">西元 (CE)</option>
+                    <option value="BCE">西元前 (BCE)</option>
+                </select>
+                <input type="number" id="perStartYear" placeholder="出生年份" class="flex-1" required>
+                <select id="perEndEra" class="flex-1">
+                    <option value="CE">西元 (CE)</option>
+                    <option value="BCE">西元前 (BCE)</option>
+                </select>
+                <input type="number" id="perEndYear" placeholder="逝世年份" class="flex-1" required>
+            </div>
+            <div class="form-row">
+                <input type="text" id="perLands" placeholder="📍 主要活動地理土地" class="full-width" required>
+            </div>
+            <div class="form-row">
+                <input type="text" id="perRegions" placeholder="所屬政權/國籍" class="full-width">
+            </div>
+            <div class="form-row">
+                <input type="text" id="perName" placeholder="人物姓名 (如: 拿破崙)" class="full-width" required>
+            </div>
+            <div class="form-row">
+                <textarea id="perDesc" placeholder="生平事蹟與歷史影響筆記..." class="full-width"></textarea>
+            </div>
+            <button type="submit" class="submit-btn">新增人物生平至時間軸</button>
+        </form>
     </div>
 
-    <!-- 時期表單 -->
-    <div class="form-card" id="form-period" style="display: none;">
-        <h3>新增歷史時期 (長時間範圍)</h3>
-        <div class="form-grid">
-            <input type="text" id="p_land" name="land" class="full-width" list="saved-locations-list" placeholder="📍 地理土地/區域 (如:亞洲大陸、台灣島)" autocomplete="off" required>
-            <input type="text" id="p_region" class="full-width" list="regionList" placeholder="政權/國家名稱 (如:夏朝、日本)" required>
-            <input type="text" id="p_name" class="full-width" placeholder="歷史時期名稱 (如:夏朝、美援助台灣時期)" required>
-            
-            <select id="p_start_era">
-                <option value="CE" selected>開始：西元 (CE)</option>
-                <option value="BCE">開始：西元前 (BCE)</option>
-            </select>
-            <input type="number" id="p_start_year" placeholder="開始年份 (必填)" required>
-            <input type="number" id="p_start_month" min="1" max="12" placeholder="開始月份 (選填)">
-            <input type="number" id="p_start_day" min="1" max="31" placeholder="開始日期 (選填)">
-
-            <select id="p_end_era">
-                <option value="CE" selected>結束：西元 (CE)</option>
-                <option value="BCE">結束：西元前 (BCE)</option>
-            </select>
-            <input type="number" id="p_end_year" placeholder="結束年份 (必填)" required>
-            <input type="number" id="p_end_month" min="1" max="12" placeholder="結束月份 (選填)">
-            <input type="number" id="p_end_day" min="1" max="31" placeholder="結束日期 (選填)">
-
-            <textarea id="p_description" class="full-width" placeholder="該歷史時期的背景說明..."></textarea>
-        </div>
-        <button class="btn-add" style="background-color: var(--period-color);" onclick="addPeriod()">新增歷史時期</button>
-    </div>
-
-    <!-- 人物表單 -->
-    <div class="form-card" id="form-person" style="display: none;">
-        <h3>新增人物生平 (出生與死亡時間)</h3>
-        <div class="form-grid">
-            <input type="text" id="person_name" class="full-width" placeholder="👤 人物姓名 (如: 李登輝、成吉思汗)" required>
-            <input type="text" id="person_land" class="full-width" list="saved-locations-list" placeholder="📍 主要活動地理土地/區域 (如: 台灣島, 蒙古高原)" autocomplete="off" required>
-            <input type="text" id="person_region" class="full-width" list="regionList" placeholder="國籍/所屬政權" required>
-            
-            <select id="person_birth_era">
-                <option value="CE" selected>出生：西元 (CE)</option>
-                <option value="BCE">出生：西元前 (BCE)</option>
-            </select>
-            <input type="number" id="person_birth_year" placeholder="出生年份 (必填)" required>
-            <input type="number" id="person_birth_month" min="1" max="12" placeholder="出生月份 (選填)">
-            <input type="number" id="person_birth_day" min="1" max="31" placeholder="出生日期 (選填)">
-
-            <select id="person_death_era">
-                <option value="CE" selected>逝世：西元 (CE)</option>
-                <option value="BCE">逝世：西元前 (BCE)</option>
-            </select>
-            <input type="number" id="person_death_year" placeholder="逝世年份 (必填)" required>
-            <input type="number" id="person_death_month" min="1" max="12" placeholder="逝世月份 (選填)">
-            <input type="number" id="person_death_day" min="1" max="31" placeholder="逝世日期 (選填)">
-
-            <textarea id="person_description" class="full-width" placeholder="人物生平簡介 / 歷史影響與評價筆記..."></textarea>
-        </div>
-        <button class="btn-add" style="background-color: var(--person-color);" onclick="addPerson()">新增人物生平至時間軸</button>
-    </div>
-
-    <!-- 篩選控制列 -->
-    <div class="controls">
-        <div class="controls-group">
-            <div>
-                <label><b>檢視國家/政權：</b></label>
+    <!-- 三重篩選器與載入統計卡片 -->
+    <div class="filter-card">
+        <div class="filter-row">
+            <div class="filter-group">
+                <label>檢視國家/政權：</label>
                 <select id="filterRegion" onchange="renderTimeline()">
                     <option value="ALL">全覽（全世界模式）</option>
                 </select>
             </div>
-            <div>
-                <label><b>按土地篩選：</b></label>
+            <div class="filter-group">
+                <label>按土地篩選：</label>
                 <select id="filterLand" onchange="renderTimeline()">
                     <option value="ALL">全部土地區域</option>
                 </select>
             </div>
-            <div>
-                <label><b>按人物篩選：</b></label>
+            <div class="filter-group">
+                <label>按人物篩選：</label>
                 <select id="filterPerson" onchange="renderTimeline()">
                     <option value="ALL">全部人物</option>
                 </select>
             </div>
         </div>
-        <div id="totalStats" style="color: #666; font-size: 14px;">資料載入中...</div>
+        <div class="stats-text" id="loadStatsText">已載入 0 個事件，0 個時期/生平</div>
     </div>
 
-    <div class="timeline" id="timeline"></div>
+    <!-- 垂直時間軸視覺化列表 -->
+    <div class="timeline-container" id="timelineList"></div>
 </div>
 
-<!-- 彈出模組：同時期歷史 -->
-<div class="modal" id="modalWorldHistory">
+<!-- Modal 彈窗：查看同時期世界歷史 -->
+<div id="modalWorldHistory" class="modal">
     <div class="modal-content">
-        <div class="modal-header">
-            <h3 id="modalWorldHistoryTitle">同時期世界歷史</h3>
-            <span class="close-btn" onclick="closeModal('modalWorldHistory')">&times;</span>
-        </div>
+        <span class="close-btn" onclick="closeModal('modalWorldHistory')">&times;</span>
+        <h3 id="modalWorldHistoryTitle">同時期的世界歷史</h3>
         <div id="modalWorldHistoryBody"></div>
     </div>
 </div>
 
-<!-- Firebase 雲端連接與同步邏輯 -->
+<!-- Firebase 模組與資料同步處理 -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -545,24 +511,16 @@
 
     window.events = [];
     window.periods = [];
+    let isInitialized = false;
+
+    function parseTags(str) {
+        if (!str) return [];
+        return str.split(/[,，、\s]+/).map(s => s.trim()).filter(Boolean);
+    }
 
     function normalizeItem(item) {
-        let lands = item.lands;
-        if (!lands) {
-            if (item.land) {
-                lands = item.land.split(/[,，、\s]+/).map(l => l.trim()).filter(Boolean);
-            } else {
-                lands = ['未指定土地'];
-            }
-        }
-        let regions = item.regions;
-        if (!regions) {
-            if (item.region) {
-                regions = item.region.split(/[,，、\s]+/).map(r => r.trim()).filter(Boolean);
-            } else {
-                regions = ['未分類'];
-            }
-        }
+        let lands = item.lands || (item.land ? parseTags(item.land) : []);
+        let regions = item.regions || (item.region ? parseTags(item.region) : []);
         return { ...item, lands, regions };
     }
 
@@ -571,406 +529,358 @@
             const data = docSnap.data();
             window.events = (data.events || []).map(normalizeItem);
             window.periods = (data.periods || []).map(normalizeItem);
-            document.getElementById('lastSyncTime').innerText = `已於 ${new Date().toLocaleTimeString()} 同步`;
-        } else {
-            window.periods = [
-                { id: 101, lands: ['亞洲大陸'], regions: ['夏朝'], name: '夏朝', startEra: 'BCE', startYear: 2070, endEra: 'BCE', endYear: 1600, desc: '時代特徵：大禹之子「啟」繼位，開啟中國歷史上第一個世襲制王朝。' },
-                { id: 102, lands: ['亞洲大陸'], regions: ['商朝'], name: '商朝', startEra: 'BCE', startYear: 1600, endEra: 'BCE', endYear: 1046, desc: '時代特徵：湯滅夏後建立。出現了成熟的甲骨文與青銅器文化。' }
-            ];
+            document.getElementById('lastSyncTime').innerText = `已於 ${new Date().toLocaleTimeString()} 完成雲端同步`;
+            isInitialized = true;
+        } else if (!isInitialized) {
+            window.periods = [];
             window.events = [];
+            isInitialized = true;
             window.saveToCloud();
         }
         if (window.updateDropdowns) window.updateDropdowns();
         if (window.renderTimeline) window.renderTimeline();
     }, (error) => {
         console.error("Firestore 監聽失敗:", error);
-        document.getElementById('lastSyncTime').innerText = "連線失敗，請確認 Firebase 權限與設定";
+        document.getElementById('lastSyncTime').innerText = "連線失敗，請檢查權限與設定";
     });
 
     window.saveToCloud = async function() {
+        if (!isInitialized) return; 
         try {
             await setDoc(docRef, {
                 events: window.events,
                 periods: window.periods,
                 updatedAt: new Date().toISOString()
-            });
+            }, { merge: true });
         } catch (e) {
             console.error("雲端儲存錯誤:", e);
-            alert("雲端儲存失敗！請檢查 Firebase Firestore 資料庫讀寫權限。");
+            alert("雲端儲存失敗！");
         }
     };
 </script>
 
-<!-- 主要業務邏輯 Script -->
+<!-- 主要互動邏輯 -->
 <script>
-    function parseMultiInput(inputStr, defaultVal = '未指定') {
-        if (!inputStr) return [defaultVal];
-        const res = inputStr.split(/[,，、\s]+/).map(s => s.trim()).filter(Boolean);
-        return res.length ? res : [defaultVal];
-    }
-
+    // Tab 切換邏輯
     function switchTab(tab) {
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        document.getElementById('form-event').style.display = 'none';
-        document.getElementById('form-period').style.display = 'none';
-        document.getElementById('form-person').style.display = 'none';
+        document.getElementById('formEvent').style.display = 'none';
+        document.getElementById('formPeriod').style.display = 'none';
+        document.getElementById('formPerson').style.display = 'none';
 
         if (tab === 'event') {
-            document.querySelectorAll('.tab-btn')[0].classList.add('active');
-            document.getElementById('form-event').style.display = 'block';
+            document.getElementById('tabBtnEvent').classList.add('active');
+            document.getElementById('formEvent').style.display = 'block';
+            document.getElementById('formTitle').innerText = '新增歷史事件';
         } else if (tab === 'period') {
-            document.querySelectorAll('.tab-btn')[1].classList.add('active');
-            document.getElementById('form-period').style.display = 'block';
+            document.getElementById('tabBtnPeriod').classList.add('active');
+            document.getElementById('formPeriod').style.display = 'block';
+            document.getElementById('formTitle').innerText = '新增歷史時期';
         } else if (tab === 'person') {
-            document.querySelectorAll('.tab-btn')[2].classList.add('active');
-            document.getElementById('form-person').style.display = 'block';
+            document.getElementById('tabBtnPerson').classList.add('active');
+            document.getElementById('formPerson').style.display = 'block';
+            document.getElementById('formTitle').innerText = '新增人物生平';
         }
     }
 
-    function closeModal(id) {
-        document.getElementById(id).style.display = 'none';
-    }
-
-    function getExactSortValue(era, year, month = 1, day = 1) {
-        const m = (month || 1).toString().padStart(2, '0');
-        const d = (day || 1).toString().padStart(2, '0');
-        const num = parseFloat(`${Math.abs(year)}.${m}${d}`);
-        return era === 'BCE' ? -num : num;
-    }
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
     function formatDate(era, year, month, day) {
-        let str = era === 'BCE' ? `西元前 ${year} 年` : `西元 ${year} 年`;
-        if (month) str += ` ${month} 月`;
-        if (day) str += ` ${day} 日`;
+        let str = (era === 'BCE' ? '西元前 ' : '西元 ') + year + ' 年';
+        if (month) str += ' ' + month + ' 月';
+        if (day) str += ' ' + day + ' 日';
         return str;
     }
 
-    function calculateDuration(sEra, sYear, sMonth, sDay, eEra, eYear, eMonth, eDay) {
-        const realStartYear = sEra === 'BCE' ? -sYear + 1 : sYear;
-        const realEndYear = eEra === 'BCE' ? -eYear + 1 : eYear;
-
-        const startM = sMonth || 1;
-        const endM = eMonth || 1;
-        const startD = sDay || 1;
-        const endD = eDay || 1;
-
-        if (sDay && eDay && realStartYear === realEndYear && startM === endM) {
-            const days = endD - startD + 1;
-            return days > 0 ? `歷時 ${days} 天` : `歷時 1 天`;
-        }
-
-        let totalMonths = (realEndYear - realStartYear) * 12 + (endM - startM);
-        if (eDay && sDay && endD < startD) {
-            totalMonths--;
-        }
-
-        if (totalMonths <= 0) return `歷時不足 1 個月`;
-
-        const yrs = Math.floor(totalMonths / 12);
-        const mos = totalMonths % 12;
-
-        let result = '歷時 ';
-        if (yrs > 0) result += `${yrs} 年 `;
-        if (mos > 0) result += `${mos} 個月`;
-        return result.trim();
+    function parseTags(str) {
+        if (!str) return [];
+        return str.split(/[,，、\s]+/).map(s => s.trim()).filter(Boolean);
     }
 
-    function updateDropdowns() {
-        const regionSet = new Set();
-        const landSet = new Set();
-        const personSet = new Set();
-
-        const allItems = [...(window.events || []), ...(window.periods || [])];
-        allItems.forEach(item => {
-            (item.regions || []).forEach(r => regionSet.add(r));
-            (item.lands || []).forEach(l => landSet.add(l));
-            if (item.type === 'person' && item.personName) {
-                personSet.add(item.personName);
-            }
-        });
-
-        const regSelect = document.getElementById('filterRegion');
-        const currentReg = regSelect.value;
-        regSelect.innerHTML = '<option value="ALL">全覽（全世界模式）</option>';
-        Array.from(regionSet).sort().forEach(r => {
-            const opt = document.createElement('option');
-            opt.value = r;
-            opt.textContent = r;
-            regSelect.appendChild(opt);
-        });
-        regSelect.value = regionSet.has(currentReg) ? currentReg : 'ALL';
-
-        const landSelect = document.getElementById('filterLand');
-        const currentLand = landSelect.value;
-        landSelect.innerHTML = '<option value="ALL">全部土地區域</option>';
-        Array.from(landSet).sort().forEach(l => {
-            const opt = document.createElement('option');
-            opt.value = l;
-            opt.textContent = l;
-            landSelect.appendChild(opt);
-        });
-        landSelect.value = landSet.has(currentLand) ? currentLand : 'ALL';
-
-        const personSelect = document.getElementById('filterPerson');
-        const currentPerson = personSelect.value;
-        personSelect.innerHTML = '<option value="ALL">全部人物</option>';
-        Array.from(personSet).sort().forEach(p => {
-            const opt = document.createElement('option');
-            opt.value = p;
-            opt.textContent = p;
-            personSelect.appendChild(opt);
-        });
-        personSelect.value = personSet.has(currentPerson) ? currentPerson : 'ALL';
-    }
-
-    function renderTimeline() {
-        const filterReg = document.getElementById('filterRegion').value;
-        const filterLand = document.getElementById('filterLand').value;
-        const filterPerson = document.getElementById('filterPerson').value;
-        const timeline = document.getElementById('timeline');
-        timeline.innerHTML = '';
-
-        let filteredEvents = (window.events || []).filter(e => {
-            const regMatch = filterReg === 'ALL' || (e.regions && e.regions.includes(filterReg));
-            const landMatch = filterLand === 'ALL' || (e.lands && e.lands.includes(filterLand));
-            const personMatch = filterPerson === 'ALL';
-            return regMatch && landMatch && personMatch;
-        });
-
-        let filteredPeriods = (window.periods || []).filter(p => {
-            const regMatch = filterReg === 'ALL' || (p.regions && p.regions.includes(filterReg));
-            const landMatch = filterLand === 'ALL' || (p.lands && p.lands.includes(filterLand));
-            const personMatch = filterPerson === 'ALL' || (p.type === 'person' && p.personName === filterPerson);
-            return regMatch && landMatch && personMatch;
-        });
-
-        document.getElementById('totalStats').innerText = `已載入 ${filteredEvents.length} 個事件，${filteredPeriods.length} 個時期/生平`;
-
-        const timelineData = [];
-
-        filteredEvents.forEach(e => {
-            timelineData.push({
-                itemType: 'event',
-                sortVal: getExactSortValue(e.era, e.year, e.month, e.day),
-                data: e
-            });
-        });
-
-        filteredPeriods.forEach(p => {
-            timelineData.push({
-                itemType: 'period',
-                sortVal: getExactSortValue(p.startEra, p.startYear, p.startMonth, p.startDay),
-                data: p
-            });
-        });
-
-        timelineData.sort((a, b) => a.sortVal - b.sortVal);
-
-        if (timelineData.length === 0) {
-            timeline.innerHTML = '<p style="text-align:center; color:#888; padding:40px;">尚無相關歷史資料。</p>';
-            return;
-        }
-
-        timelineData.forEach(item => {
-            const div = document.createElement('div');
-            div.className = 'timeline-item';
-
-            if (item.itemType === 'event') {
-                const e = item.data;
-                div.innerHTML = `
-                    <div class="timeline-year">${formatDate(e.era, e.year, e.month, e.day)}</div>
-                    <div class="timeline-marker"></div>
-                    <div class="timeline-content">
-                        <div class="tag-container">
-                            ${(e.lands || []).map(l => `<span class="tag tag-land" onclick="filterByLand('${l}')">📍 ${l}</span>`).join('')}
-                            ${(e.regions || []).map(r => `<span class="tag tag-region">🏛️ ${r}</span>`).join('')}
-                        </div>
-                        <h3 class="event-title">${e.title}</h3>
-                        <p class="event-desc">${e.desc || '無詳細說明'}</p>
-                        <div class="action-btns">
-                            <button class="btn-feature" onclick="showWorldHistory(${e.id}, false)">📍 查看同時期世界歷史</button>
-                            <div class="action-right">
-                                <button class="btn-action btn-delete" onclick="deleteItem(${e.id}, 'event')">刪除</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            } else {
-                const p = item.data;
-                const isPerson = p.type === 'person';
-                const durationStr = calculateDuration(p.startEra, p.startYear, p.startMonth, p.startDay, p.endEra, p.endYear, p.endMonth, p.endDay);
-
-                div.innerHTML = `
-                    <div class="timeline-year">
-                        ${formatDate(p.startEra, p.startYear, p.startMonth, p.startDay)}
-                        <br>至<br>
-                        ${formatDate(p.endEra, p.endYear, p.endMonth, p.endDay)}
-                        <span class="duration-badge">${durationStr}</span>
-                    </div>
-                    <div class="timeline-marker ${isPerson ? 'person-marker' : 'period-marker'}"></div>
-                    <div class="timeline-content ${isPerson ? 'person-content' : 'period-content'}">
-                        <div class="tag-container">
-                            ${(p.lands || []).map(l => `<span class="tag tag-land" onclick="filterByLand('${l}')">📍 ${l}</span>`).join('')}
-                            ${(p.regions || []).map(r => `<span class="tag tag-region">🏛️ ${r}</span>`).join('')}
-                        </div>
-                        <h3 class="event-title">${isPerson ? '👤 ' + p.personName : p.name}</h3>
-                        <p class="event-desc">${p.desc || '無詳細說明'}</p>
-                        <div class="action-btns">
-                            <button class="btn-feature" onclick="showWorldHistory(${p.id}, true)">📍 查看同時期世界歷史</button>
-                            <div class="action-right">
-                                <button class="btn-action btn-delete" onclick="deleteItem(${p.id}, 'period')">刪除</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-            timeline.appendChild(div);
-        });
-    }
-
-    function addEvent() {
-        const year = parseInt(document.getElementById('year').value);
-        const title = document.getElementById('title').value.trim();
-        if (!year || !title) return alert('請填寫年份與事件名稱！');
-
+    // 表單提交 handler
+    function handleAddEvent(e) {
+        e.preventDefault();
         const newEvent = {
             id: Date.now(),
-            era: document.getElementById('era').value,
-            year: year,
-            month: parseInt(document.getElementById('month').value) || null,
-            day: parseInt(document.getElementById('day').value) || null,
-            lands: parseMultiInput(document.getElementById('land').value, '未指定土地'),
-            regions: parseMultiInput(document.getElementById('region').value, '未分類政權'),
-            title: title,
-            desc: document.getElementById('description').value
+            era: document.getElementById('eventEra').value,
+            year: parseInt(document.getElementById('eventYear').value),
+            month: document.getElementById('eventMonth').value ? parseInt(document.getElementById('eventMonth').value) : null,
+            day: document.getElementById('eventDay').value ? parseInt(document.getElementById('eventDay').value) : null,
+            lands: parseTags(document.getElementById('eventLands').value),
+            regions: parseTags(document.getElementById('eventRegions').value),
+            title: document.getElementById('eventTitle').value,
+            desc: document.getElementById('eventDesc').value
         };
-
         window.events.push(newEvent);
         window.saveToCloud();
-        document.getElementById('title').value = '';
-        document.getElementById('description').value = '';
+        e.target.reset();
     }
 
-    function addPeriod() {
-        const sYear = parseInt(document.getElementById('p_start_year').value);
-        const eYear = parseInt(document.getElementById('p_end_year').value);
-        const name = document.getElementById('p_name').value.trim();
-        if (!sYear || !eYear || !name) return alert('請完整填寫時期名稱與起止年份！');
-
+    function handleAddPeriod(e) {
+        e.preventDefault();
         const newPeriod = {
             id: Date.now(),
             type: 'period',
-            name: name,
-            lands: parseMultiInput(document.getElementById('p_land').value, '未指定土地'),
-            regions: parseMultiInput(document.getElementById('p_region').value, '未分類政權'),
-            startEra: document.getElementById('p_start_era').value,
-            startYear: sYear,
-            startMonth: parseInt(document.getElementById('p_start_month').value) || null,
-            startDay: parseInt(document.getElementById('p_start_day').value) || null,
-            endEra: document.getElementById('p_end_era').value,
-            endYear: eYear,
-            endMonth: parseInt(document.getElementById('p_end_month').value) || null,
-            endDay: parseInt(document.getElementById('p_end_day').value) || null,
-            desc: document.getElementById('p_description').value
+            startEra: document.getElementById('pStartEra').value,
+            startYear: parseInt(document.getElementById('pStartYear').value),
+            endEra: document.getElementById('pEndEra').value,
+            endYear: parseInt(document.getElementById('pEndYear').value),
+            lands: parseTags(document.getElementById('pLands').value),
+            regions: parseTags(document.getElementById('pRegions').value),
+            name: document.getElementById('pName').value,
+            desc: document.getElementById('pDesc').value
         };
-
         window.periods.push(newPeriod);
         window.saveToCloud();
-        document.getElementById('p_name').value = '';
-        document.getElementById('p_description').value = '';
+        e.target.reset();
     }
 
-    function addPerson() {
-        const name = document.getElementById('person_name').value.trim();
-        const bYear = parseInt(document.getElementById('person_birth_year').value);
-        const dYear = parseInt(document.getElementById('person_death_year').value);
-        if (!name || !bYear || !dYear) return alert('請完整填寫人物姓名與生卒年份！');
-
+    function handleAddPerson(e) {
+        e.preventDefault();
         const newPerson = {
             id: Date.now(),
             type: 'person',
-            personName: name,
-            name: name + ' 的生平',
-            lands: parseMultiInput(document.getElementById('person_land').value, '未指定土地'),
-            regions: parseMultiInput(document.getElementById('person_region').value, '未分類政權'),
-            startEra: document.getElementById('person_birth_era').value,
-            startYear: bYear,
-            startMonth: parseInt(document.getElementById('person_birth_month').value) || null,
-            startDay: parseInt(document.getElementById('person_birth_day').value) || null,
-            endEra: document.getElementById('person_death_era').value,
-            endYear: dYear,
-            endMonth: parseInt(document.getElementById('person_death_month').value) || null,
-            endDay: parseInt(document.getElementById('person_death_day').value) || null,
-            desc: document.getElementById('person_description').value
+            startEra: document.getElementById('perStartEra').value,
+            startYear: parseInt(document.getElementById('perStartYear').value),
+            endEra: document.getElementById('perEndEra').value,
+            endYear: parseInt(document.getElementById('perEndYear').value),
+            lands: parseTags(document.getElementById('perLands').value),
+            regions: parseTags(document.getElementById('perRegions').value),
+            personName: document.getElementById('perName').value,
+            desc: document.getElementById('perDesc').value
         };
-
         window.periods.push(newPerson);
         window.saveToCloud();
-        document.getElementById('person_name').value = '';
-        document.getElementById('person_description').value = '';
+        e.target.reset();
     }
 
-    function deleteItem(id, type) {
-        if (!confirm('確定要刪除這筆紀錄嗎？')) return;
-        if (type === 'event') {
-            window.events = window.events.filter(e => e.id !== id);
+    // 時間計算與重疊判斷邏輯
+    function getAbsoluteYear(era, year, month = 1, day = 1) {
+        let y = (era === 'BCE') ? (-Math.abs(year) + 1) : Math.abs(year);
+        let m = (month || 1) / 13;
+        let d = (day || 1) / 365;
+        return y + (y >= 0 ? (m + d / 12) : -(m + d / 12));
+    }
+
+    function getItemRange(item) {
+        if (item.startYear !== undefined) {
+            const start = getAbsoluteYear(item.startEra, item.startYear, item.startMonth, item.startDay);
+            const end = getAbsoluteYear(item.endEra, item.endYear, item.endMonth, item.endDay);
+            return { start: Math.min(start, end), end: Math.max(start, end) };
         } else {
-            window.periods = window.periods.filter(p => p.id !== id);
+            const t = getAbsoluteYear(item.era, item.year, item.month, item.day);
+            return { start: t, end: t };
         }
-        window.saveToCloud();
     }
 
-    function filterByLand(landName) {
-        document.getElementById('filterLand').value = landName;
-        renderTimeline();
+    function isOverlapping(rangeA, rangeB) {
+        return rangeA.start <= rangeB.end && rangeA.end >= rangeB.start;
     }
 
-    function showWorldHistory(id, isPeriod) {
-        const modal = document.getElementById('modalWorldHistory');
+    // 更新選單 Dropdowns
+    function updateDropdowns() {
+        const fRegion = document.getElementById('filterRegion');
+        const fLand = document.getElementById('filterLand');
+        const fPerson = document.getElementById('filterPerson');
+
+        const currRegion = fRegion.value;
+        const currLand = fLand.value;
+        const currPerson = fPerson.value;
+
+        const allRegions = new Set();
+        const allLands = new Set();
+        const allPersons = new Set();
+
+        [...(window.events || []), ...(window.periods || [])].forEach(item => {
+            (item.regions || []).forEach(r => allRegions.add(r));
+            (item.lands || []).forEach(l => allLands.add(l));
+            if (item.personName) allPersons.add(item.personName);
+        });
+
+        fRegion.innerHTML = '<option value="ALL">全覽（全世界模式）</option>';
+        allRegions.forEach(r => fRegion.innerHTML += `<option value="${r}">${r}</option>`);
+        fRegion.value = allRegions.has(currRegion) ? currRegion : 'ALL';
+
+        fLand.innerHTML = '<option value="ALL">全部土地區域</option>';
+        allLands.forEach(l => fLand.innerHTML += `<option value="${l}">${l}</option>`);
+        fLand.value = allLands.has(currLand) ? currLand : 'ALL';
+
+        fPerson.innerHTML = '<option value="ALL">全部人物</option>';
+        allPersons.forEach(p => fPerson.innerHTML += `<option value="${p}">${p}</option>`);
+        fPerson.value = allPersons.has(currPerson) ? currPerson : 'ALL';
+    }
+
+    // 同時期歷史檢視
+    function showWorldHistory(targetId, isPeriod) {
+        const allPeriods = window.periods || [];
+        const allEvents = window.events || [];
+        
+        let targetItem = isPeriod 
+            ? allPeriods.find(p => p.id === targetId)
+            : allEvents.find(e => e.id === targetId);
+
+        if (!targetItem) return alert('找不到該歷史資料！');
+
+        const targetRange = getItemRange(targetItem);
+        const targetTitle = isPeriod ? (targetItem.personName ? targetItem.personName : targetItem.name) : targetItem.title;
+
+        const matchedPeriods = [];
+        const matchedPersons = [];
+        const matchedEvents = [];
+
+        allPeriods.forEach(p => {
+            if (p.id === targetId) return; 
+            if (isOverlapping(targetRange, getItemRange(p))) {
+                if (p.type === 'person') matchedPersons.push(p);
+                else matchedPeriods.push(p);
+            }
+        });
+
+        allEvents.forEach(e => {
+            if (e.id === targetId) return; 
+            if (isOverlapping(targetRange, getItemRange(e))) matchedEvents.push(e);
+        });
+
+        document.getElementById('modalWorldHistoryTitle').innerText = `「${targetTitle}」同時期的世界歷史`;
         const body = document.getElementById('modalWorldHistoryBody');
         body.innerHTML = '';
 
-        let targetSortVal = 0;
-        let titleName = '';
+        let totalMatches = matchedPeriods.length + matchedPersons.length + matchedEvents.length;
 
-        if (!isPeriod) {
-            const item = window.events.find(e => e.id === id);
-            if (!item) return;
-            targetSortVal = getExactSortValue(item.era, item.year, item.month, item.day);
-            titleName = item.title;
+        if (totalMatches === 0) {
+            body.innerHTML = '<p style="text-align:center; color:#888; padding:20px;">在此時間區間內，尚無登記其他同步進行的歷史時期、人物或事件。</p>';
         } else {
-            const item = window.periods.find(p => p.id === id);
-            if (!item) return;
-            targetSortVal = getExactSortValue(item.startEra, item.startYear, item.startMonth, item.startDay);
-            titleName = item.type === 'person' ? item.personName : item.name;
+            let html = '';
+            if (matchedPeriods.length > 0) {
+                html += `<h4 style="color:var(--period-color); margin:12px 0 8px 0;">⏳ 同時期歷史時期 (${matchedPeriods.length})</h4>`;
+                matchedPeriods.forEach(p => {
+                    html += `
+                        <div class="world-history-card" style="border-left-color: var(--period-color);">
+                            <div style="font-weight:bold; font-size:12px; color:#e53e3e;">${formatDate(p.startEra, p.startYear, p.startMonth, p.startDay)} ～ ${formatDate(p.endEra, p.endYear, p.endMonth, p.endDay)}</div>
+                            <div style="font-weight:bold; font-size:15px; margin:2px 0;">${p.name}</div>
+                            <div class="tag-group" style="margin:4px 0;">
+                                ${(p.lands || []).map(l => `<span class="tag-item land">📍 ${l}</span>`).join('')}
+                                ${(p.regions || []).map(r => `<span class="tag-item regime">🏛️ ${r}</span>`).join('')}
+                            </div>
+                            <div style="font-size:13px; color:#4a5568;">${p.desc || ''}</div>
+                        </div>`;
+                });
+            }
+            if (matchedPersons.length > 0) {
+                html += `<h4 style="color:var(--person-color); margin:12px 0 8px 0;">👤 同時期生平人物 (${matchedPersons.length})</h4>`;
+                matchedPersons.forEach(p => {
+                    html += `
+                        <div class="world-history-card" style="border-left-color: var(--person-color);">
+                            <div style="font-weight:bold; font-size:12px; color:#e53e3e;">${formatDate(p.startEra, p.startYear, p.startMonth, p.startDay)} ～ ${formatDate(p.endEra, p.endYear, p.endMonth, p.endDay)}</div>
+                            <div style="font-weight:bold; font-size:15px; margin:2px 0;">👤 ${p.personName}</div>
+                            <div class="tag-group" style="margin:4px 0;">
+                                ${(p.lands || []).map(l => `<span class="tag-item land">📍 ${l}</span>`).join('')}
+                                ${(p.regions || []).map(r => `<span class="tag-item regime">🏛️ ${r}</span>`).join('')}
+                            </div>
+                            <div style="font-size:13px; color:#4a5568;">${p.desc || ''}</div>
+                        </div>`;
+                });
+            }
+            if (matchedEvents.length > 0) {
+                html += `<h4 style="color:var(--accent-red); margin:12px 0 8px 0;">📍 同時期發生事件 (${matchedEvents.length})</h4>`;
+                matchedEvents.forEach(e => {
+                    html += `
+                        <div class="world-history-card" style="border-left-color: var(--accent-red);">
+                            <div style="font-weight:bold; font-size:12px; color:#e53e3e;">${formatDate(e.era, e.year, e.month, e.day)}</div>
+                            <div style="font-weight:bold; font-size:15px; margin:2px 0;">${e.title}</div>
+                            <div class="tag-group" style="margin:4px 0;">
+                                ${(e.lands || []).map(l => `<span class="tag-item land">📍 ${l}</span>`).join('')}
+                                ${(e.regions || []).map(r => `<span class="tag-item regime">🏛️ ${r}</span>`).join('')}
+                            </div>
+                            <div style="font-size:13px; color:#4a5568;">${e.desc || ''}</div>
+                        </div>`;
+                });
+            }
+            body.innerHTML = html;
         }
 
-        document.getElementById('modalWorldHistoryTitle').innerText = `「${titleName}」同時期的世界事件`;
+        openModal('modalWorldHistory');
+    }
 
-        // 搜尋同時期或近鄰的歷史紀錄
-        const relatedEvents = (window.events || []).filter(e => {
-            const s = getExactSortValue(e.era, e.year, e.month, e.day);
-            return Math.abs(s - targetSortVal) <= 50; // 前後50年範圍
+    // 渲染時間軸與界面
+    function renderTimeline() {
+        const listContainer = document.getElementById('timelineList');
+        if (!listContainer) return;
+
+        const selRegion = document.getElementById('filterRegion').value;
+        const selLand = document.getElementById('filterLand').value;
+        const selPerson = document.getElementById('filterPerson').value;
+
+        // 篩選過濾器
+        const filterFn = item => {
+            const regOk = (selRegion === 'ALL') || (item.regions && item.regions.includes(selRegion));
+            const landOk = (selLand === 'ALL') || (item.lands && item.lands.includes(selLand));
+            const perOk = (selPerson === 'ALL') || (item.personName === selPerson);
+            return regOk && landOk && perOk;
+        };
+
+        const filteredPeriods = (window.periods || []).filter(filterFn);
+        const filteredEvents = (window.events || []).filter(filterFn);
+
+        // 更新載入統計
+        document.getElementById('loadStatsText').innerText = `已載入 ${filteredEvents.length} 個事件，${filteredPeriods.length} 個時期/生平`;
+
+        // 將所有項目混合並依時間排序
+        const allCombined = [
+            ...filteredPeriods.map(p => ({ ...p, isPeriod: true, sortTime: getItemRange(p).start })),
+            ...filteredEvents.map(e => ({ ...e, isPeriod: false, sortTime: getItemRange(e).start }))
+        ].sort((a, b) => a.sortTime - b.sortTime);
+
+        let html = '';
+
+        allCombined.forEach(item => {
+            if (item.isPeriod) {
+                const isPerson = item.type === 'person';
+                const dateText = `${formatDate(item.startEra, item.startYear, item.startMonth, item.startDay)} <br>至<br> ${formatDate(item.endEra, item.endYear, item.endMonth, item.endDay)}`;
+                const titleText = isPerson ? `👤 ${item.personName}` : item.name;
+
+                html += `
+                    <div class="timeline-item">
+                        <div class="timeline-left">${dateText}</div>
+                        <div class="timeline-spine"><div class="timeline-node"></div></div>
+                        <div class="timeline-content" style="border-left-color: ${isPerson ? 'var(--person-color)' : 'var(--period-color)'}">
+                            <div class="tag-group">
+                                ${(item.lands || []).map(l => `<span class="tag-item land">📍 ${l}</span>`).join('')}
+                                ${(item.regions || []).map(r => `<span class="tag-item regime">🏛️ ${r}</span>`).join('')}
+                            </div>
+                            <div class="timeline-title">${titleText}</div>
+                            <div class="timeline-desc">${item.desc || ''}</div>
+                            <button class="btn-history" onclick="showWorldHistory(${item.id}, true)">查看同時期世界歷史</button>
+                        </div>
+                    </div>`;
+            } else {
+                const dateText = formatDate(item.era, item.year, item.month, item.day);
+
+                html += `
+                    <div class="timeline-item">
+                        <div class="timeline-left">${dateText}</div>
+                        <div class="timeline-spine"><div class="timeline-node"></div></div>
+                        <div class="timeline-content">
+                            <div class="tag-group">
+                                ${(item.lands || []).map(l => `<span class="tag-item land">📍 ${l}</span>`).join('')}
+                                ${(item.regions || []).map(r => `<span class="tag-item regime">🏛️ ${r}</span>`).join('')}
+                            </div>
+                            <div class="timeline-title">${item.title}</div>
+                            <div class="timeline-desc">${item.desc || ''}</div>
+                            <button class="btn-history" onclick="showWorldHistory(${item.id}, false)">查看同時期世界歷史</button>
+                        </div>
+                    </div>`;
+            }
         });
 
-        if (relatedEvents.length === 0) {
-            body.innerHTML = '<p style="color:#666;">同年代暫無其他登記的世界事件筆記。</p>';
-        } else {
-            relatedEvents.forEach(e => {
-                const div = document.createElement('div');
-                div.className = 'land-history-item';
-                div.innerHTML = `
-                    <div class="land-history-time">${formatDate(e.era, e.year, e.month, e.day)}</div>
-                    <div class="land-history-title">${e.title}（${(e.regions || []).join('、')}）</div>
-                    <div style="font-size:13px; color:#555;">📍 地點：${(e.lands || []).join('、')}</div>
-                    <div style="font-size:13px; color:#666; margin-top:4px;">${e.desc || ''}</div>
-                `;
-                body.appendChild(div);
-            });
+        if (!html) {
+            html = '<div style="text-align:center; color:#a0aec0; padding:40px;">目前無符合篩選條件的歷史紀錄</div>';
         }
 
-        modal.style.display = 'flex';
+        listContainer.innerHTML = html;
     }
 </script>
+
 </body>
 </html>
