@@ -250,12 +250,52 @@
             border-left: 4px solid #3182ce;
         }
 
+        /* 卡片標頭列與操作按鈕 */
+        .timeline-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 6px;
+            margin-left: 10px;
+            flex-shrink: 0;
+        }
+
+        .btn-action-edit {
+            background: #edf2f7;
+            color: #2b6cb0;
+            border: 1px solid #cbd5e0;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-action-edit:hover { background: #e2e8f0; }
+
+        .btn-action-delete {
+            background: #fff5f5;
+            color: #e53e3e;
+            border: 1px solid #fed7d7;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-action-delete:hover { background: #fed7d7; }
+
         /* 標籤 Tag 樣式 */
         .tag-group {
             display: flex;
             gap: 6px;
             flex-wrap: wrap;
-            margin-bottom: 10px;
         }
 
         .tag-item {
@@ -490,6 +530,58 @@
     </div>
 </div>
 
+<!-- Modal 彈窗：編輯歷史紀錄 -->
+<div id="modalEdit" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeModal('modalEdit')">&times;</span>
+        <h3 id="editModalTitle">編輯歷史紀錄</h3>
+        <form id="formEdit" onsubmit="handleSaveEdit(event)">
+            <input type="hidden" id="editId">
+            <input type="hidden" id="editIsPeriod">
+            <input type="hidden" id="editType">
+
+            <!-- 時間區塊 (事件用) -->
+            <div id="editEventTimeBlock" class="form-row">
+                <select id="editEra" class="flex-1">
+                    <option value="CE">西元 (CE)</option>
+                    <option value="BCE">西元前 (BCE)</option>
+                </select>
+                <input type="number" id="editYear" placeholder="年份" class="flex-1">
+                <input type="number" id="editMonth" placeholder="月份 (選填)" class="flex-1">
+                <input type="number" id="editDay" placeholder="日期 (選填)" class="flex-1">
+            </div>
+
+            <!-- 時間區塊 (時期/人物用) -->
+            <div id="editPeriodTimeBlock" class="form-row" style="display:none;">
+                <select id="editStartEra" class="flex-1">
+                    <option value="CE">西元 (CE)</option>
+                    <option value="BCE">西元前 (BCE)</option>
+                </select>
+                <input type="number" id="editStartYear" placeholder="起始/出生年份" class="flex-1">
+                <select id="editEndEra" class="flex-1">
+                    <option value="CE">西元 (CE)</option>
+                    <option value="BCE">西元前 (BCE)</option>
+                </select>
+                <input type="number" id="editEndYear" placeholder="結束/逝世年份" class="flex-1">
+            </div>
+
+            <div class="form-row">
+                <input type="text" id="editLands" placeholder="📍 地點/地理區域" class="full-width" required>
+            </div>
+            <div class="form-row">
+                <input type="text" id="editRegions" placeholder="相關政權/國家" class="full-width">
+            </div>
+            <div class="form-row">
+                <input type="text" id="editTitle" placeholder="名稱 / 姓名" class="full-width" required>
+            </div>
+            <div class="form-row">
+                <textarea id="editDesc" placeholder="詳細內容 / 歷史意義筆記..." class="full-width"></textarea>
+            </div>
+            <button type="submit" class="submit-btn" style="background:#3182ce;">儲存變更</button>
+        </form>
+    </div>
+</div>
+
 <!-- Firebase 模組與資料同步處理 -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -559,9 +651,8 @@
     };
 </script>
 
-<!-- 主要互動邏輯 -->
+<!-- 主要互動邏輯與編輯/刪除功能 -->
 <script>
-    // Tab 切換邏輯
     function switchTab(tab) {
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         document.getElementById('formEvent').style.display = 'none';
@@ -598,7 +689,7 @@
         return str.split(/[,，、\s]+/).map(s => s.trim()).filter(Boolean);
     }
 
-    // 表單提交 handler
+    // 新增邏輯
     function handleAddEvent(e) {
         e.preventDefault();
         const newEvent = {
@@ -653,6 +744,115 @@
         window.periods.push(newPerson);
         window.saveToCloud();
         e.target.reset();
+    }
+
+    // 刪除邏輯
+    function deleteItem(id, isPeriod) {
+        if (!confirm("確定要刪除這筆歷史紀錄嗎？刪除後不可復原。")) return;
+
+        if (isPeriod) {
+            window.periods = (window.periods || []).filter(p => p.id !== id);
+        } else {
+            window.events = (window.events || []).filter(e => e.id !== id);
+        }
+
+        window.saveToCloud();
+        updateDropdowns();
+        renderTimeline();
+    }
+
+    // 編輯開啟 modal 邏輯
+    function editItem(id, isPeriod) {
+        const item = isPeriod 
+            ? (window.periods || []).find(p => p.id === id)
+            : (window.events || []).find(e => e.id === id);
+
+        if (!item) return alert("找不到該筆資料！");
+
+        document.getElementById('editId').value = item.id;
+        document.getElementById('editIsPeriod').value = isPeriod ? "true" : "false";
+        document.getElementById('editType').value = item.type || (isPeriod ? "period" : "event");
+
+        document.getElementById('editLands').value = (item.lands || []).join(', ');
+        document.getElementById('editRegions').value = (item.regions || []).join(', ');
+        document.getElementById('editDesc').value = item.desc || '';
+
+        if (!isPeriod) {
+            // 編輯事件
+            document.getElementById('editModalTitle').innerText = "✏️ 編輯歷史事件";
+            document.getElementById('editEventTimeBlock').style.display = "flex";
+            document.getElementById('editPeriodTimeBlock').style.display = "none";
+
+            document.getElementById('editEra').value = item.era || 'CE';
+            document.getElementById('editYear').value = item.year || '';
+            document.getElementById('editMonth').value = item.month || '';
+            document.getElementById('editDay').value = item.day || '';
+            document.getElementById('editTitle').value = item.title || '';
+        } else {
+            // 編輯時期/人物
+            const isPerson = item.type === 'person';
+            document.getElementById('editModalTitle').innerText = isPerson ? "✏️ 編輯人物生平" : "✏️ 編輯歷史時期";
+            document.getElementById('editEventTimeBlock').style.display = "none";
+            document.getElementById('editPeriodTimeBlock').style.display = "flex";
+
+            document.getElementById('editStartEra').value = item.startEra || 'CE';
+            document.getElementById('editStartYear').value = item.startYear || '';
+            document.getElementById('editEndEra').value = item.endEra || 'CE';
+            document.getElementById('editEndYear').value = item.endYear || '';
+            document.getElementById('editTitle').value = isPerson ? item.personName : item.name;
+        }
+
+        openModal('modalEdit');
+    }
+
+    // 儲存編輯結果
+    function handleSaveEdit(e) {
+        e.preventDefault();
+        const id = parseInt(document.getElementById('editId').value);
+        const isPeriod = document.getElementById('editIsPeriod').value === "true";
+        const type = document.getElementById('editType').value;
+
+        const lands = parseTags(document.getElementById('editLands').value);
+        const regions = parseTags(document.getElementById('editRegions').value);
+        const desc = document.getElementById('editDesc').value;
+        const titleVal = document.getElementById('editTitle').value;
+
+        if (!isPeriod) {
+            // 更新事件
+            const idx = (window.events || []).findIndex(e => e.id === id);
+            if (idx !== -1) {
+                window.events[idx] = {
+                    ...window.events[idx],
+                    era: document.getElementById('editEra').value,
+                    year: parseInt(document.getElementById('editYear').value),
+                    month: document.getElementById('editMonth').value ? parseInt(document.getElementById('editMonth').value) : null,
+                    day: document.getElementById('editDay').value ? parseInt(document.getElementById('editDay').value) : null,
+                    lands, regions, desc,
+                    title: titleVal
+                };
+            }
+        } else {
+            // 更新時期或人物
+            const idx = (window.periods || []).findIndex(p => p.id === id);
+            if (idx !== -1) {
+                const isPerson = type === 'person';
+                window.periods[idx] = {
+                    ...window.periods[idx],
+                    startEra: document.getElementById('editStartEra').value,
+                    startYear: parseInt(document.getElementById('editStartYear').value),
+                    endEra: document.getElementById('editEndEra').value,
+                    endYear: parseInt(document.getElementById('editEndYear').value),
+                    lands, regions, desc,
+                    name: isPerson ? undefined : titleVal,
+                    personName: isPerson ? titleVal : undefined
+                };
+            }
+        }
+
+        window.saveToCloud();
+        closeModal('modalEdit');
+        updateDropdowns();
+        renderTimeline();
     }
 
     // 時間計算與重疊判斷邏輯
@@ -845,9 +1045,15 @@
                         <div class="timeline-left">${dateText}</div>
                         <div class="timeline-spine"><div class="timeline-node"></div></div>
                         <div class="timeline-content" style="border-left-color: ${isPerson ? 'var(--person-color)' : 'var(--period-color)'}">
-                            <div class="tag-group">
-                                ${(item.lands || []).map(l => `<span class="tag-item land">📍 ${l}</span>`).join('')}
-                                ${(item.regions || []).map(r => `<span class="tag-item regime">🏛️ ${r}</span>`).join('')}
+                            <div class="timeline-card-header">
+                                <div class="tag-group">
+                                    ${(item.lands || []).map(l => `<span class="tag-item land">📍 ${l}</span>`).join('')}
+                                    ${(item.regions || []).map(r => `<span class="tag-item regime">🏛️ ${r}</span>`).join('')}
+                                </div>
+                                <div class="card-actions">
+                                    <button class="btn-action-edit" onclick="editItem(${item.id}, true)">✏️ 編輯</button>
+                                    <button class="btn-action-delete" onclick="deleteItem(${item.id}, true)">🗑️ 刪除</button>
+                                </div>
                             </div>
                             <div class="timeline-title">${titleText}</div>
                             <div class="timeline-desc">${item.desc || ''}</div>
@@ -862,9 +1068,15 @@
                         <div class="timeline-left">${dateText}</div>
                         <div class="timeline-spine"><div class="timeline-node"></div></div>
                         <div class="timeline-content">
-                            <div class="tag-group">
-                                ${(item.lands || []).map(l => `<span class="tag-item land">📍 ${l}</span>`).join('')}
-                                ${(item.regions || []).map(r => `<span class="tag-item regime">🏛️ ${r}</span>`).join('')}
+                            <div class="timeline-card-header">
+                                <div class="tag-group">
+                                    ${(item.lands || []).map(l => `<span class="tag-item land">📍 ${l}</span>`).join('')}
+                                    ${(item.regions || []).map(r => `<span class="tag-item regime">🏛️ ${r}</span>`).join('')}
+                                </div>
+                                <div class="card-actions">
+                                    <button class="btn-action-edit" onclick="editItem(${item.id}, false)">✏️ 編輯</button>
+                                    <button class="btn-action-delete" onclick="deleteItem(${item.id}, false)">🗑️ 刪除</button>
+                                </div>
                             </div>
                             <div class="timeline-title">${item.title}</div>
                             <div class="timeline-desc">${item.desc || ''}</div>
