@@ -15,14 +15,12 @@
             --border-color: #e2e8f0;
             --text-primary: #2d3748;
             --text-secondary: #718096;
-            --btn-active: #2d3748;
-            --btn-inactive: #e2e8f0;
             --accent-red: #d9534f;
             --tag-land-bg: #e6f4ea;
             --tag-land-text: #137333;
             --tag-regime-bg: #e8f0fe;
             --tag-regime-text: #1a73e8;
-            --period-color: #4a90e2;
+            --period-color: #3182ce;
             --person-color: #8e44ad;
         }
 
@@ -137,7 +135,6 @@
 
         .submit-btn {
             width: 100%;
-            background: #2d3748;
             color: white;
             padding: 12px;
             border: none;
@@ -145,10 +142,13 @@
             font-size: 15px;
             font-weight: bold;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: opacity 0.2s;
         }
+        .submit-btn:hover { opacity: 0.9; }
 
-        .submit-btn:hover { background: #1a202c; }
+        .btn-event { background: #2d3748; }
+        .btn-period { background: #3182ce; }
+        .btn-person { background: #8e44ad; }
 
         /* 篩選器與統計卡片 */
         .filter-card {
@@ -364,7 +364,7 @@
             background: white;
             padding: 24px;
             border-radius: 8px;
-            max-width: 650px;
+            max-width: 750px;
             width: 90%;
             max-height: 85vh;
             overflow-y: auto;
@@ -406,7 +406,7 @@
     <div class="form-card">
         <h2 id="formTitle">新增歷史事件</h2>
         
-        <!-- 表單：新增事件 -->
+        <!-- 表單 1：新增事件 (完全符合範例) -->
         <form id="formEvent" onsubmit="handleAddEvent(event)">
             <div class="form-row">
                 <select id="eventEra" class="flex-1">
@@ -430,65 +430,78 @@
                 <textarea id="eventDesc" placeholder="詳細內容 / 歷史意義筆記..." class="full-width"></textarea>
             </div>
             <div class="form-tip">💡 提示：跨國界事件可輸入多個地理區域（以逗點 `,` 或頓號 `、` 隔開）。</div>
-            <button type="submit" class="submit-btn">新增事件至時間軸</button>
+            <button type="submit" class="submit-btn btn-event">新增事件至時間軸</button>
         </form>
 
-        <!-- 表單：新增時期 (預設隱藏) -->
+        <!-- 表單 2：新增歷史時期 (長時間範圍，完全符合範例) -->
         <form id="formPeriod" style="display:none;" onsubmit="handleAddPeriod(event)">
             <div class="form-row">
+                <input type="text" id="pLands" placeholder="📍 地理土地/區域 (如:亞洲大陸、台灣島)" class="full-width" required>
+            </div>
+            <div class="form-row">
+                <input type="text" id="pRegions" placeholder="政權/國家名稱 (如:夏朝、日本)" class="full-width">
+            </div>
+            <div class="form-row">
+                <input type="text" id="pName" placeholder="歷史時期名稱 (如:夏朝、美援台灣時期)" class="full-width" required>
+            </div>
+            <div class="form-row">
                 <select id="pStartEra" class="flex-1">
-                    <option value="CE">西元 (CE)</option>
-                    <option value="BCE">西元前 (BCE)</option>
+                    <option value="CE">開始：西元 (CE)</option>
+                    <option value="BCE">開始：西元前 (BCE)</option>
                 </select>
-                <input type="number" id="pStartYear" placeholder="起始年份" class="flex-1" required>
+                <input type="number" id="pStartYear" placeholder="開始年份 (必填)" class="flex-1" required>
+                <input type="number" id="pStartMonth" placeholder="開始月份 (選填)" class="flex-1">
+                <input type="number" id="pStartDay" placeholder="開始日期 (選填)" class="flex-1">
                 <select id="pEndEra" class="flex-1">
-                    <option value="CE">西元 (CE)</option>
-                    <option value="BCE">西元前 (BCE)</option>
+                    <option value="CE">結束：西元 (CE)</option>
+                    <option value="BCE">結束：西元前 (BCE)</option>
                 </select>
-                <input type="number" id="pEndYear" placeholder="結束年份" class="flex-1" required>
+                <input type="number" id="pEndYear" placeholder="結束年份 (必填)" class="flex-1" required>
             </div>
             <div class="form-row">
-                <input type="text" id="pLands" placeholder="📍 地點或涵蓋地理土地/區域" class="full-width" required>
+                <input type="number" id="pEndMonth" placeholder="結束月份 (選填)" class="flex-1" style="max-width: 24%;">
+                <input type="number" id="pEndDay" placeholder="結束日期 (選填)" class="flex-1" style="max-width: 24%;">
             </div>
             <div class="form-row">
-                <input type="text" id="pRegions" placeholder="涵蓋政權/王朝" class="full-width">
+                <textarea id="pDesc" placeholder="該歷史時期的背景說明..." class="full-width"></textarea>
             </div>
-            <div class="form-row">
-                <input type="text" id="pName" placeholder="時期名稱 (如: 冷戰時期)" class="full-width" required>
-            </div>
-            <div class="form-row">
-                <textarea id="pDesc" placeholder="時期時代特徵背景說明..." class="full-width"></textarea>
-            </div>
-            <button type="submit" class="submit-btn">新增時期至時間軸</button>
+            <button type="submit" class="submit-btn btn-period">新增歷史時期</button>
         </form>
 
-        <!-- 表單：新增人物 (預設隱藏) -->
+        <!-- 表單 3：新增人物生平 (出生與死亡時間，完全符合範例) -->
         <form id="formPerson" style="display:none;" onsubmit="handleAddPerson(event)">
             <div class="form-row">
+                <input type="text" id="perName" placeholder="👤 人物姓名 (如: 李登輝、成吉思汗)" class="full-width" required>
+            </div>
+            <div class="form-row">
+                <input type="text" id="perLands" placeholder="📍 主要活動地理土地/區域 (如: 台灣島, 蒙古高原)" class="full-width" required>
+            </div>
+            <div class="form-row">
+                <input type="text" id="perRegions" placeholder="國籍/所屬政權" class="full-width">
+            </div>
+            <div class="form-row">
                 <select id="perStartEra" class="flex-1">
-                    <option value="CE">西元 (CE)</option>
-                    <option value="BCE">西元前 (BCE)</option>
+                    <option value="CE">出生：西元 (CE)</option>
+                    <option value="BCE">出生：西元前 (BCE)</option>
                 </select>
-                <input type="number" id="perStartYear" placeholder="出生年份" class="flex-1" required>
+                <input type="number" id="perStartYear" placeholder="出生年份 (必填)" class="flex-1" required>
+                <input type="number" id="perStartMonth" placeholder="出生月份 (選填)" class="flex-1">
+                <input type="number" id="perStartDay" placeholder="出生日期 (選填)" class="flex-1">
                 <select id="perEndEra" class="flex-1">
-                    <option value="CE">西元 (CE)</option>
-                    <option value="BCE">西元前 (BCE)</option>
+                    <option value="CE">逝世：西元 (CE)</option>
+                    <option value="BCE">逝世：西元前 (BCE)</option>
                 </select>
-                <input type="number" id="perEndYear" placeholder="逝世年份" class="flex-1" required>
+                <input type="number" id="perEndYear" placeholder="逝世年份 (必填)" class="flex-1" required>
             </div>
             <div class="form-row">
-                <input type="text" id="perLands" placeholder="📍 主要活動地理土地" class="full-width" required>
+                <input type="number" id="perEndMonth" placeholder="逝世月份 (選填)" class="flex-1" style="max-width: 24%;">
+                <input type="number" id="perEndDay" placeholder="逝世日期 (選填)" class="flex-1" style="max-width: 24%;">
             </div>
             <div class="form-row">
-                <input type="text" id="perRegions" placeholder="所屬政權/國籍" class="full-width">
+                <textarea id="perDesc" placeholder="人物生平簡介 / 歷史影響與評價筆記..." class="full-width"></textarea>
             </div>
-            <div class="form-row">
-                <input type="text" id="perName" placeholder="人物姓名 (如: 拿破崙)" class="full-width" required>
-            </div>
-            <div class="form-row">
-                <textarea id="perDesc" placeholder="生平事蹟與歷史影響筆記..." class="full-width"></textarea>
-            </div>
-            <button type="submit" class="submit-btn">新增人物生平至時間軸</button>
+            <div class="form-tip">💡 提示：輸入生平後可於時間軸點選查看該人物一生的時代背景與同期世界事件。</div>
+            <button type="submit" class="submit-btn btn-person">新增人物生平至時間軸</button>
         </form>
     </div>
 
@@ -530,7 +543,7 @@
     </div>
 </div>
 
-<!-- Modal 彈窗：編輯歷史紀錄 -->
+<!-- Modal 彈窗：編輯歷史紀錄 (升級支援精準日期) -->
 <div id="modalEdit" class="modal">
     <div class="modal-content">
         <span class="close-btn" onclick="closeModal('modalEdit')">&times;</span>
@@ -546,23 +559,31 @@
                     <option value="CE">西元 (CE)</option>
                     <option value="BCE">西元前 (BCE)</option>
                 </select>
-                <input type="number" id="editYear" placeholder="年份" class="flex-1">
+                <input type="number" id="editYear" placeholder="年份" class="flex-1" required>
                 <input type="number" id="editMonth" placeholder="月份 (選填)" class="flex-1">
                 <input type="number" id="editDay" placeholder="日期 (選填)" class="flex-1">
             </div>
 
-            <!-- 時間區塊 (時期/人物用) -->
-            <div id="editPeriodTimeBlock" class="form-row" style="display:none;">
-                <select id="editStartEra" class="flex-1">
-                    <option value="CE">西元 (CE)</option>
-                    <option value="BCE">西元前 (BCE)</option>
-                </select>
-                <input type="number" id="editStartYear" placeholder="起始/出生年份" class="flex-1">
-                <select id="editEndEra" class="flex-1">
-                    <option value="CE">西元 (CE)</option>
-                    <option value="BCE">西元前 (BCE)</option>
-                </select>
-                <input type="number" id="editEndYear" placeholder="結束/逝世年份" class="flex-1">
+            <!-- 時間區塊 (時期/人物用，完整擴充月/日) -->
+            <div id="editPeriodTimeBlock" style="display:none;">
+                <div class="form-row">
+                    <select id="editStartEra" class="flex-1">
+                        <option value="CE">開始/出生：西元 (CE)</option>
+                        <option value="BCE">開始/出生：西元前 (BCE)</option>
+                    </select>
+                    <input type="number" id="editStartYear" placeholder="開始/出生年份" class="flex-1" required>
+                    <input type="number" id="editStartMonth" placeholder="開始/出生月份" class="flex-1">
+                    <input type="number" id="editStartDay" placeholder="開始/出生日期" class="flex-1">
+                </div>
+                <div class="form-row">
+                    <select id="editEndEra" class="flex-1">
+                        <option value="CE">結束/逝世：西元 (CE)</option>
+                        <option value="BCE">結束/逝世：西元前 (BCE)</option>
+                    </select>
+                    <input type="number" id="editEndYear" placeholder="結束/逝世年份" class="flex-1" required>
+                    <input type="number" id="editEndMonth" placeholder="結束/逝世月份" class="flex-1">
+                    <input type="number" id="editEndDay" placeholder="結束/逝世日期" class="flex-1">
+                </div>
             </div>
 
             <div class="form-row">
@@ -666,11 +687,11 @@
         } else if (tab === 'period') {
             document.getElementById('tabBtnPeriod').classList.add('active');
             document.getElementById('formPeriod').style.display = 'block';
-            document.getElementById('formTitle').innerText = '新增歷史時期';
+            document.getElementById('formTitle').innerText = '新增歷史時期 (長時間範圍)';
         } else if (tab === 'person') {
             document.getElementById('tabBtnPerson').classList.add('active');
             document.getElementById('formPerson').style.display = 'block';
-            document.getElementById('formTitle').innerText = '新增人物生平';
+            document.getElementById('formTitle').innerText = '新增人物生平 (出生與死亡時間)';
         }
     }
 
@@ -689,7 +710,7 @@
         return str.split(/[,，、\s]+/).map(s => s.trim()).filter(Boolean);
     }
 
-    // 新增邏輯
+    // 表單 1 提交：新增事件
     function handleAddEvent(e) {
         e.preventDefault();
         const newEvent = {
@@ -708,6 +729,7 @@
         e.target.reset();
     }
 
+    // 表單 2 提交：新增歷史時期 (完整擴充開始/結束月日)
     function handleAddPeriod(e) {
         e.preventDefault();
         const newPeriod = {
@@ -715,8 +737,12 @@
             type: 'period',
             startEra: document.getElementById('pStartEra').value,
             startYear: parseInt(document.getElementById('pStartYear').value),
+            startMonth: document.getElementById('pStartMonth').value ? parseInt(document.getElementById('pStartMonth').value) : null,
+            startDay: document.getElementById('pStartDay').value ? parseInt(document.getElementById('pStartDay').value) : null,
             endEra: document.getElementById('pEndEra').value,
             endYear: parseInt(document.getElementById('pEndYear').value),
+            endMonth: document.getElementById('pEndMonth').value ? parseInt(document.getElementById('pEndMonth').value) : null,
+            endDay: document.getElementById('pEndDay').value ? parseInt(document.getElementById('pEndDay').value) : null,
             lands: parseTags(document.getElementById('pLands').value),
             regions: parseTags(document.getElementById('pRegions').value),
             name: document.getElementById('pName').value,
@@ -727,6 +753,7 @@
         e.target.reset();
     }
 
+    // 表單 3 提交：新增人物生平 (完整擴充出生/逝世月日)
     function handleAddPerson(e) {
         e.preventDefault();
         const newPerson = {
@@ -734,8 +761,12 @@
             type: 'person',
             startEra: document.getElementById('perStartEra').value,
             startYear: parseInt(document.getElementById('perStartYear').value),
+            startMonth: document.getElementById('perStartMonth').value ? parseInt(document.getElementById('perStartMonth').value) : null,
+            startDay: document.getElementById('perStartDay').value ? parseInt(document.getElementById('perStartDay').value) : null,
             endEra: document.getElementById('perEndEra').value,
             endYear: parseInt(document.getElementById('perEndYear').value),
+            endMonth: document.getElementById('perEndMonth').value ? parseInt(document.getElementById('perEndMonth').value) : null,
+            endDay: document.getElementById('perEndDay').value ? parseInt(document.getElementById('perEndDay').value) : null,
             lands: parseTags(document.getElementById('perLands').value),
             regions: parseTags(document.getElementById('perRegions').value),
             personName: document.getElementById('perName').value,
@@ -746,7 +777,7 @@
         e.target.reset();
     }
 
-    // 刪除邏輯
+    // 刪除紀錄
     function deleteItem(id, isPeriod) {
         if (!confirm("確定要刪除這筆歷史紀錄嗎？刪除後不可復原。")) return;
 
@@ -761,7 +792,7 @@
         renderTimeline();
     }
 
-    // 編輯開啟 modal 邏輯
+    // 編輯 Modal 開啟邏輯
     function editItem(id, isPeriod) {
         const item = isPeriod 
             ? (window.periods || []).find(p => p.id === id)
@@ -793,12 +824,18 @@
             const isPerson = item.type === 'person';
             document.getElementById('editModalTitle').innerText = isPerson ? "✏️ 編輯人物生平" : "✏️ 編輯歷史時期";
             document.getElementById('editEventTimeBlock').style.display = "none";
-            document.getElementById('editPeriodTimeBlock').style.display = "flex";
+            document.getElementById('editPeriodTimeBlock').style.display = "block";
 
             document.getElementById('editStartEra').value = item.startEra || 'CE';
             document.getElementById('editStartYear').value = item.startYear || '';
+            document.getElementById('editStartMonth').value = item.startMonth || '';
+            document.getElementById('editStartDay').value = item.startDay || '';
+
             document.getElementById('editEndEra').value = item.endEra || 'CE';
             document.getElementById('editEndYear').value = item.endYear || '';
+            document.getElementById('editEndMonth').value = item.endMonth || '';
+            document.getElementById('editEndDay').value = item.endDay || '';
+
             document.getElementById('editTitle').value = isPerson ? item.personName : item.name;
         }
 
@@ -840,8 +877,12 @@
                     ...window.periods[idx],
                     startEra: document.getElementById('editStartEra').value,
                     startYear: parseInt(document.getElementById('editStartYear').value),
+                    startMonth: document.getElementById('editStartMonth').value ? parseInt(document.getElementById('editStartMonth').value) : null,
+                    startDay: document.getElementById('editStartDay').value ? parseInt(document.getElementById('editStartDay').value) : null,
                     endEra: document.getElementById('editEndEra').value,
                     endYear: parseInt(document.getElementById('editEndYear').value),
+                    endMonth: document.getElementById('editEndMonth').value ? parseInt(document.getElementById('editEndMonth').value) : null,
+                    endDay: document.getElementById('editEndDay').value ? parseInt(document.getElementById('editEndDay').value) : null,
                     lands, regions, desc,
                     name: isPerson ? undefined : titleVal,
                     personName: isPerson ? titleVal : undefined
@@ -878,7 +919,7 @@
         return rangeA.start <= rangeB.end && rangeA.end >= rangeB.start;
     }
 
-    // 更新選單 Dropdowns
+    // 更新下拉選單
     function updateDropdowns() {
         const fRegion = document.getElementById('filterRegion');
         const fLand = document.getElementById('filterLand');
@@ -911,7 +952,7 @@
         fPerson.value = allPersons.has(currPerson) ? currPerson : 'ALL';
     }
 
-    // 同時期歷史檢視
+    // 同時期歷史檢視 Modal
     function showWorldHistory(targetId, isPeriod) {
         const allPeriods = window.periods || [];
         const allEvents = window.events || [];
@@ -1003,7 +1044,7 @@
         openModal('modalWorldHistory');
     }
 
-    // 渲染時間軸與界面
+    // 渲染時間軸列表
     function renderTimeline() {
         const listContainer = document.getElementById('timelineList');
         if (!listContainer) return;
@@ -1012,7 +1053,6 @@
         const selLand = document.getElementById('filterLand').value;
         const selPerson = document.getElementById('filterPerson').value;
 
-        // 篩選過濾器
         const filterFn = item => {
             const regOk = (selRegion === 'ALL') || (item.regions && item.regions.includes(selRegion));
             const landOk = (selLand === 'ALL') || (item.lands && item.lands.includes(selLand));
@@ -1023,10 +1063,8 @@
         const filteredPeriods = (window.periods || []).filter(filterFn);
         const filteredEvents = (window.events || []).filter(filterFn);
 
-        // 更新載入統計
         document.getElementById('loadStatsText').innerText = `已載入 ${filteredEvents.length} 個事件，${filteredPeriods.length} 個時期/生平`;
 
-        // 將所有項目混合並依時間排序
         const allCombined = [
             ...filteredPeriods.map(p => ({ ...p, isPeriod: true, sortTime: getItemRange(p).start })),
             ...filteredEvents.map(e => ({ ...e, isPeriod: false, sortTime: getItemRange(e).start }))
