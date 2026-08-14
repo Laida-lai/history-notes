@@ -20,6 +20,7 @@
             --tag-land-text: #137333;
             --tag-regime-bg: #e8f0fe;
             --tag-regime-text: #1a73e8;
+            --event-color: #2d3748;
             --period-color: #3182ce;
             --person-color: #8e44ad;
         }
@@ -146,9 +147,9 @@
         }
         .submit-btn:hover { opacity: 0.9; }
 
-        .btn-event { background: #2d3748; }
-        .btn-period { background: #3182ce; }
-        .btn-person { background: #8e44ad; }
+        .btn-event { background: var(--event-color); }
+        .btn-period { background: var(--period-color); }
+        .btn-person { background: var(--person-color); }
 
         /* 篩選器與統計卡片 */
         .filter-card {
@@ -216,6 +217,13 @@
             flex-shrink: 0;
         }
 
+        .duration-text {
+            font-size: 12px;
+            color: #718096;
+            font-weight: normal;
+            margin-top: 4px;
+        }
+
         .timeline-spine {
             position: relative;
             width: 20px;
@@ -228,13 +236,12 @@
             position: absolute;
             top: 0; bottom: -24px;
             width: 4px;
-            background: #3182ce;
+            background: #cbd5e0;
         }
 
         .timeline-node {
             width: 12px;
             height: 12px;
-            background: #3182ce;
             border-radius: 2px;
             z-index: 1;
             margin-top: 4px;
@@ -249,6 +256,19 @@
             margin-left: 15px;
             border-left: 4px solid #3182ce;
         }
+
+        /* 不同類型對應的顏色樣式 */
+        .timeline-item.type-event .timeline-content { border-left-color: var(--event-color); }
+        .timeline-item.type-event .timeline-node { background: var(--event-color); }
+        .timeline-item.type-event .timeline-spine::before { background: var(--event-color); }
+
+        .timeline-item.type-period .timeline-content { border-left-color: var(--period-color); }
+        .timeline-item.type-period .timeline-node { background: var(--period-color); }
+        .timeline-item.type-period .timeline-spine::before { background: var(--period-color); }
+
+        .timeline-item.type-person .timeline-content { border-left-color: var(--person-color); }
+        .timeline-item.type-person .timeline-node { background: var(--person-color); }
+        .timeline-item.type-person .timeline-spine::before { background: var(--person-color); }
 
         /* 卡片標頭列與操作按鈕 */
         .timeline-card-header {
@@ -406,7 +426,7 @@
     <div class="form-card">
         <h2 id="formTitle">新增歷史事件</h2>
         
-        <!-- 表單 1：新增事件 (完全符合範例) -->
+        <!-- 表單 1：新增事件 -->
         <form id="formEvent" onsubmit="handleAddEvent(event)">
             <div class="form-row">
                 <select id="eventEra" class="flex-1">
@@ -433,7 +453,7 @@
             <button type="submit" class="submit-btn btn-event">新增事件至時間軸</button>
         </form>
 
-        <!-- 表單 2：新增歷史時期 (長時間範圍，完全符合範例) -->
+        <!-- 表單 2：新增歷史時期 (長時間範圍) -->
         <form id="formPeriod" style="display:none;" onsubmit="handleAddPeriod(event)">
             <div class="form-row">
                 <input type="text" id="pLands" placeholder="📍 地理土地/區域 (如:亞洲大陸、台灣島)" class="full-width" required>
@@ -468,7 +488,7 @@
             <button type="submit" class="submit-btn btn-period">新增歷史時期</button>
         </form>
 
-        <!-- 表單 3：新增人物生平 (出生與死亡時間，完全符合範例) -->
+        <!-- 表單 3：新增人物生平 (出生與死亡時間) -->
         <form id="formPerson" style="display:none;" onsubmit="handleAddPerson(event)">
             <div class="form-row">
                 <input type="text" id="perName" placeholder="👤 人物姓名 (如: 李登輝、成吉思汗)" class="full-width" required>
@@ -543,7 +563,7 @@
     </div>
 </div>
 
-<!-- Modal 彈窗：編輯歷史紀錄 (升級支援精準日期) -->
+<!-- Modal 彈窗：編輯歷史紀錄 -->
 <div id="modalEdit" class="modal">
     <div class="modal-content">
         <span class="close-btn" onclick="closeModal('modalEdit')">&times;</span>
@@ -564,7 +584,7 @@
                 <input type="number" id="editDay" placeholder="日期 (選填)" class="flex-1">
             </div>
 
-            <!-- 時間區塊 (時期/人物用，完整擴充月/日) -->
+            <!-- 時間區塊 (時期/人物用) -->
             <div id="editPeriodTimeBlock" style="display:none;">
                 <div class="form-row">
                     <select id="editStartEra" class="flex-1">
@@ -705,6 +725,40 @@
         return str;
     }
 
+    // 計算時間差（經歷時間）
+    function calculateDuration(startEra, startYear, startMonth, startDay, endEra, endYear, endMonth, endDay) {
+        const sy = startEra === 'BCE' ? -Math.abs(startYear) + 1 : Math.abs(startYear);
+        const ey = endEra === 'BCE' ? -Math.abs(endYear) + 1 : Math.abs(endYear);
+
+        const sm = startMonth || 1;
+        const em = endMonth || (endMonth === null && startMonth !== null ? 1 : (endMonth || 1));
+        const sd = startDay || 1;
+        const ed = endDay || (endDay === null && startDay !== null ? 1 : (endDay || 1));
+
+        let yDiff = ey - sy;
+        let mDiff = em - sm;
+        let dDiff = ed - sd;
+
+        if (dDiff < 0) {
+            mDiff -= 1;
+            dDiff += 30; // 概算一個月為 30 天
+        }
+
+        if (mDiff < 0) {
+            yDiff -= 1;
+            mDiff += 12;
+        }
+
+        if (yDiff < 0) return ''; // 異常時間序不顯示
+
+        let parts = [];
+        if (yDiff > 0) parts.push(`${yDiff} 年`);
+        if (mDiff > 0 && startMonth && endMonth) parts.push(`${mDiff} 個月`);
+        if (dDiff > 0 && startDay && endDay) parts.push(`${dDiff} 天`);
+
+        return parts.length > 0 ? `(歷時 ${parts.join(' ')})` : (yDiff === 0 ? '(未滿 1 年)' : '');
+    }
+
     function parseTags(str) {
         if (!str) return [];
         return str.split(/[,，、\s]+/).map(s => s.trim()).filter(Boolean);
@@ -715,6 +769,7 @@
         e.preventDefault();
         const newEvent = {
             id: Date.now(),
+            type: 'event',
             era: document.getElementById('eventEra').value,
             year: parseInt(document.getElementById('eventYear').value),
             month: document.getElementById('eventMonth').value ? parseInt(document.getElementById('eventMonth').value) : null,
@@ -727,9 +782,11 @@
         window.events.push(newEvent);
         window.saveToCloud();
         e.target.reset();
+        updateDropdowns();
+        renderTimeline();
     }
 
-    // 表單 2 提交：新增歷史時期 (完整擴充開始/結束月日)
+    // 表單 2 提交：新增歷史時期
     function handleAddPeriod(e) {
         e.preventDefault();
         const newPeriod = {
@@ -751,9 +808,11 @@
         window.periods.push(newPeriod);
         window.saveToCloud();
         e.target.reset();
+        updateDropdowns();
+        renderTimeline();
     }
 
-    // 表單 3 提交：新增人物生平 (完整擴充出生/逝世月日)
+    // 表單 3 提交：新增人物生平
     function handleAddPerson(e) {
         e.preventDefault();
         const newPerson = {
@@ -775,6 +834,8 @@
         window.periods.push(newPerson);
         window.saveToCloud();
         e.target.reset();
+        updateDropdowns();
+        renderTimeline();
     }
 
     // 刪除紀錄
@@ -836,13 +897,13 @@
             document.getElementById('editEndMonth').value = item.endMonth || '';
             document.getElementById('editEndDay').value = item.endDay || '';
 
-            document.getElementById('editTitle').value = isPerson ? item.personName : item.name;
+            document.getElementById('editTitle').value = item.name || item.personName || '';
         }
 
         openModal('modalEdit');
     }
 
-    // 儲存編輯結果
+    // 儲存編輯內容
     function handleSaveEdit(e) {
         e.preventDefault();
         const id = parseInt(document.getElementById('editId').value);
@@ -851,12 +912,11 @@
 
         const lands = parseTags(document.getElementById('editLands').value);
         const regions = parseTags(document.getElementById('editRegions').value);
+        const title = document.getElementById('editTitle').value;
         const desc = document.getElementById('editDesc').value;
-        const titleVal = document.getElementById('editTitle').value;
 
         if (!isPeriod) {
-            // 更新事件
-            const idx = (window.events || []).findIndex(e => e.id === id);
+            const idx = window.events.findIndex(e => e.id === id);
             if (idx !== -1) {
                 window.events[idx] = {
                     ...window.events[idx],
@@ -864,17 +924,15 @@
                     year: parseInt(document.getElementById('editYear').value),
                     month: document.getElementById('editMonth').value ? parseInt(document.getElementById('editMonth').value) : null,
                     day: document.getElementById('editDay').value ? parseInt(document.getElementById('editDay').value) : null,
-                    lands, regions, desc,
-                    title: titleVal
+                    lands, regions, title, desc
                 };
             }
         } else {
-            // 更新時期或人物
-            const idx = (window.periods || []).findIndex(p => p.id === id);
+            const idx = window.periods.findIndex(p => p.id === id);
             if (idx !== -1) {
-                const isPerson = type === 'person';
-                window.periods[idx] = {
+                const updated = {
                     ...window.periods[idx],
+                    type,
                     startEra: document.getElementById('editStartEra').value,
                     startYear: parseInt(document.getElementById('editStartYear').value),
                     startMonth: document.getElementById('editStartMonth').value ? parseInt(document.getElementById('editStartMonth').value) : null,
@@ -883,10 +941,14 @@
                     endYear: parseInt(document.getElementById('editEndYear').value),
                     endMonth: document.getElementById('editEndMonth').value ? parseInt(document.getElementById('editEndMonth').value) : null,
                     endDay: document.getElementById('editEndDay').value ? parseInt(document.getElementById('editEndDay').value) : null,
-                    lands, regions, desc,
-                    name: isPerson ? undefined : titleVal,
-                    personName: isPerson ? titleVal : undefined
+                    lands, regions, desc
                 };
+                if (type === 'person') {
+                    updated.personName = title;
+                } else {
+                    updated.name = title;
+                }
+                window.periods[idx] = updated;
             }
         }
 
@@ -896,241 +958,243 @@
         renderTimeline();
     }
 
-    // 時間計算與重疊判斷邏輯
-    function getAbsoluteYear(era, year, month = 1, day = 1) {
-        let y = (era === 'BCE') ? (-Math.abs(year) + 1) : Math.abs(year);
-        let m = (month || 1) / 13;
-        let d = (day || 1) / 365;
-        return y + (y >= 0 ? (m + d / 12) : -(m + d / 12));
-    }
+    // 查看同時期世界歷史 Modal
+    function showWorldHistory(startEra, startYear, endEra, endYear, titleName) {
+        const modalTitle = document.getElementById('modalWorldHistoryTitle');
+        const modalBody = document.getElementById('modalWorldHistoryBody');
 
-    function getItemRange(item) {
-        if (item.startYear !== undefined) {
-            const start = getAbsoluteYear(item.startEra, item.startYear, item.startMonth, item.startDay);
-            const end = getAbsoluteYear(item.endEra, item.endYear, item.endMonth, item.endDay);
-            return { start: Math.min(start, end), end: Math.max(start, end) };
-        } else {
-            const t = getAbsoluteYear(item.era, item.year, item.month, item.day);
-            return { start: t, end: t };
-        }
-    }
+        modalTitle.innerText = `與【${titleName}】同時期的世界歷史`;
 
-    function isOverlapping(rangeA, rangeB) {
-        return rangeA.start <= rangeB.end && rangeA.end >= rangeB.start;
-    }
+        const sVal = getSortTime(startEra, startYear, 1, 1);
+        const eVal = getSortTime(endEra, endYear, 12, 31);
 
-    // 更新下拉選單
-    function updateDropdowns() {
-        const fRegion = document.getElementById('filterRegion');
-        const fLand = document.getElementById('filterLand');
-        const fPerson = document.getElementById('filterPerson');
-
-        const currRegion = fRegion.value;
-        const currLand = fLand.value;
-        const currPerson = fPerson.value;
-
-        const allRegions = new Set();
-        const allLands = new Set();
-        const allPersons = new Set();
-
-        [...(window.events || []), ...(window.periods || [])].forEach(item => {
-            (item.regions || []).forEach(r => allRegions.add(r));
-            (item.lands || []).forEach(l => allLands.add(l));
-            if (item.personName) allPersons.add(item.personName);
+        // 搜尋重疊事件與時期
+        const overlapEvents = window.events.filter(e => {
+            const val = getSortTime(e.era, e.year, e.month, e.day);
+            return val >= sVal && val <= eVal;
         });
 
-        fRegion.innerHTML = '<option value="ALL">全覽（全世界模式）</option>';
-        allRegions.forEach(r => fRegion.innerHTML += `<option value="${r}">${r}</option>`);
-        fRegion.value = allRegions.has(currRegion) ? currRegion : 'ALL';
-
-        fLand.innerHTML = '<option value="ALL">全部土地區域</option>';
-        allLands.forEach(l => fLand.innerHTML += `<option value="${l}">${l}</option>`);
-        fLand.value = allLands.has(currLand) ? currLand : 'ALL';
-
-        fPerson.innerHTML = '<option value="ALL">全部人物</option>';
-        allPersons.forEach(p => fPerson.innerHTML += `<option value="${p}">${p}</option>`);
-        fPerson.value = allPersons.has(currPerson) ? currPerson : 'ALL';
-    }
-
-    // 同時期歷史檢視 Modal
-    function showWorldHistory(targetId, isPeriod) {
-        const allPeriods = window.periods || [];
-        const allEvents = window.events || [];
-        
-        let targetItem = isPeriod 
-            ? allPeriods.find(p => p.id === targetId)
-            : allEvents.find(e => e.id === targetId);
-
-        if (!targetItem) return alert('找不到該歷史資料！');
-
-        const targetRange = getItemRange(targetItem);
-        const targetTitle = isPeriod ? (targetItem.personName ? targetItem.personName : targetItem.name) : targetItem.title;
-
-        const matchedPeriods = [];
-        const matchedPersons = [];
-        const matchedEvents = [];
-
-        allPeriods.forEach(p => {
-            if (p.id === targetId) return; 
-            if (isOverlapping(targetRange, getItemRange(p))) {
-                if (p.type === 'person') matchedPersons.push(p);
-                else matchedPeriods.push(p);
-            }
+        const overlapPeriods = window.periods.filter(p => {
+            const psVal = getSortTime(p.startEra, p.startYear, p.startMonth, p.startDay);
+            const peVal = getSortTime(p.endEra, p.endYear, p.endMonth, p.endDay);
+            return (psVal <= eVal && peVal >= sVal) && (p.name !== titleName && p.personName !== titleName);
         });
-
-        allEvents.forEach(e => {
-            if (e.id === targetId) return; 
-            if (isOverlapping(targetRange, getItemRange(e))) matchedEvents.push(e);
-        });
-
-        document.getElementById('modalWorldHistoryTitle').innerText = `「${targetTitle}」同時期的世界歷史`;
-        const body = document.getElementById('modalWorldHistoryBody');
-        body.innerHTML = '';
-
-        let totalMatches = matchedPeriods.length + matchedPersons.length + matchedEvents.length;
-
-        if (totalMatches === 0) {
-            body.innerHTML = '<p style="text-align:center; color:#888; padding:20px;">在此時間區間內，尚無登記其他同步進行的歷史時期、人物或事件。</p>';
-        } else {
-            let html = '';
-            if (matchedPeriods.length > 0) {
-                html += `<h4 style="color:var(--period-color); margin:12px 0 8px 0;">⏳ 同時期歷史時期 (${matchedPeriods.length})</h4>`;
-                matchedPeriods.forEach(p => {
-                    html += `
-                        <div class="world-history-card" style="border-left-color: var(--period-color);">
-                            <div style="font-weight:bold; font-size:12px; color:#e53e3e;">${formatDate(p.startEra, p.startYear, p.startMonth, p.startDay)} ～ ${formatDate(p.endEra, p.endYear, p.endMonth, p.endDay)}</div>
-                            <div style="font-weight:bold; font-size:15px; margin:2px 0;">${p.name}</div>
-                            <div class="tag-group" style="margin:4px 0;">
-                                ${(p.lands || []).map(l => `<span class="tag-item land">📍 ${l}</span>`).join('')}
-                                ${(p.regions || []).map(r => `<span class="tag-item regime">🏛️ ${r}</span>`).join('')}
-                            </div>
-                            <div style="font-size:13px; color:#4a5568;">${p.desc || ''}</div>
-                        </div>`;
-                });
-            }
-            if (matchedPersons.length > 0) {
-                html += `<h4 style="color:var(--person-color); margin:12px 0 8px 0;">👤 同時期生平人物 (${matchedPersons.length})</h4>`;
-                matchedPersons.forEach(p => {
-                    html += `
-                        <div class="world-history-card" style="border-left-color: var(--person-color);">
-                            <div style="font-weight:bold; font-size:12px; color:#e53e3e;">${formatDate(p.startEra, p.startYear, p.startMonth, p.startDay)} ～ ${formatDate(p.endEra, p.endYear, p.endMonth, p.endDay)}</div>
-                            <div style="font-weight:bold; font-size:15px; margin:2px 0;">👤 ${p.personName}</div>
-                            <div class="tag-group" style="margin:4px 0;">
-                                ${(p.lands || []).map(l => `<span class="tag-item land">📍 ${l}</span>`).join('')}
-                                ${(p.regions || []).map(r => `<span class="tag-item regime">🏛️ ${r}</span>`).join('')}
-                            </div>
-                            <div style="font-size:13px; color:#4a5568;">${p.desc || ''}</div>
-                        </div>`;
-                });
-            }
-            if (matchedEvents.length > 0) {
-                html += `<h4 style="color:var(--accent-red); margin:12px 0 8px 0;">📍 同時期發生事件 (${matchedEvents.length})</h4>`;
-                matchedEvents.forEach(e => {
-                    html += `
-                        <div class="world-history-card" style="border-left-color: var(--accent-red);">
-                            <div style="font-weight:bold; font-size:12px; color:#e53e3e;">${formatDate(e.era, e.year, e.month, e.day)}</div>
-                            <div style="font-weight:bold; font-size:15px; margin:2px 0;">${e.title}</div>
-                            <div class="tag-group" style="margin:4px 0;">
-                                ${(e.lands || []).map(l => `<span class="tag-item land">📍 ${l}</span>`).join('')}
-                                ${(e.regions || []).map(r => `<span class="tag-item regime">🏛️ ${r}</span>`).join('')}
-                            </div>
-                            <div style="font-size:13px; color:#4a5568;">${e.desc || ''}</div>
-                        </div>`;
-                });
-            }
-            body.innerHTML = html;
-        }
-
-        openModal('modalWorldHistory');
-    }
-
-    // 渲染時間軸列表
-    function renderTimeline() {
-        const listContainer = document.getElementById('timelineList');
-        if (!listContainer) return;
-
-        const selRegion = document.getElementById('filterRegion').value;
-        const selLand = document.getElementById('filterLand').value;
-        const selPerson = document.getElementById('filterPerson').value;
-
-        const filterFn = item => {
-            const regOk = (selRegion === 'ALL') || (item.regions && item.regions.includes(selRegion));
-            const landOk = (selLand === 'ALL') || (item.lands && item.lands.includes(selLand));
-            const perOk = (selPerson === 'ALL') || (item.personName === selPerson);
-            return regOk && landOk && perOk;
-        };
-
-        const filteredPeriods = (window.periods || []).filter(filterFn);
-        const filteredEvents = (window.events || []).filter(filterFn);
-
-        document.getElementById('loadStatsText').innerText = `已載入 ${filteredEvents.length} 個事件，${filteredPeriods.length} 個時期/生平`;
-
-        const allCombined = [
-            ...filteredPeriods.map(p => ({ ...p, isPeriod: true, sortTime: getItemRange(p).start })),
-            ...filteredEvents.map(e => ({ ...e, isPeriod: false, sortTime: getItemRange(e).start }))
-        ].sort((a, b) => a.sortTime - b.sortTime);
 
         let html = '';
 
-        allCombined.forEach(item => {
-            if (item.isPeriod) {
-                const isPerson = item.type === 'person';
-                const dateText = `${formatDate(item.startEra, item.startYear, item.startMonth, item.startDay)} <br>至<br> ${formatDate(item.endEra, item.endYear, item.endMonth, item.endDay)}`;
-                const titleText = isPerson ? `👤 ${item.personName}` : item.name;
-
+        if (overlapEvents.length === 0 && overlapPeriods.length === 0) {
+            html = '<p style="color:#718096;">此時間範圍內目前尚無其他記載的事件或時期。</p>';
+        } else {
+            overlapEvents.forEach(e => {
                 html += `
-                    <div class="timeline-item">
-                        <div class="timeline-left">${dateText}</div>
-                        <div class="timeline-spine"><div class="timeline-node"></div></div>
-                        <div class="timeline-content" style="border-left-color: ${isPerson ? 'var(--person-color)' : 'var(--period-color)'}">
-                            <div class="timeline-card-header">
-                                <div class="tag-group">
-                                    ${(item.lands || []).map(l => `<span class="tag-item land">📍 ${l}</span>`).join('')}
-                                    ${(item.regions || []).map(r => `<span class="tag-item regime">🏛️ ${r}</span>`).join('')}
-                                </div>
-                                <div class="card-actions">
-                                    <button class="btn-action-edit" onclick="editItem(${item.id}, true)">✏️ 編輯</button>
-                                    <button class="btn-action-delete" onclick="deleteItem(${item.id}, true)">🗑️ 刪除</button>
-                                </div>
-                            </div>
-                            <div class="timeline-title">${titleText}</div>
-                            <div class="timeline-desc">${item.desc || ''}</div>
-                            <button class="btn-history" onclick="showWorldHistory(${item.id}, true)">查看同時期世界歷史</button>
+                    <div class="world-history-card">
+                        <div style="font-weight:bold; color:#2d3748;">📍 [事件] ${e.title}</div>
+                        <div style="font-size:12px; color:#718096; margin-top:2px;">
+                            ${formatDate(e.era, e.year, e.month, e.day)} | 地點：${(e.lands||[]).join(', ')}
                         </div>
-                    </div>`;
-            } else {
-                const dateText = formatDate(item.era, item.year, item.month, item.day);
+                        ${e.desc ? `<div style="font-size:13px; margin-top:4px; color:#4a5568;">${e.desc}</div>` : ''}
+                    </div>
+                `;
+            });
 
+            overlapPeriods.forEach(p => {
+                const name = p.type === 'person' ? `👤 人物生平：${p.personName}` : `⏳ 歷史時期：${p.name}`;
                 html += `
-                    <div class="timeline-item">
-                        <div class="timeline-left">${dateText}</div>
-                        <div class="timeline-spine"><div class="timeline-node"></div></div>
-                        <div class="timeline-content">
-                            <div class="timeline-card-header">
-                                <div class="tag-group">
-                                    ${(item.lands || []).map(l => `<span class="tag-item land">📍 ${l}</span>`).join('')}
-                                    ${(item.regions || []).map(r => `<span class="tag-item regime">🏛️ ${r}</span>`).join('')}
-                                </div>
-                                <div class="card-actions">
-                                    <button class="btn-action-edit" onclick="editItem(${item.id}, false)">✏️ 編輯</button>
-                                    <button class="btn-action-delete" onclick="deleteItem(${item.id}, false)">🗑️ 刪除</button>
-                                </div>
-                            </div>
-                            <div class="timeline-title">${item.title}</div>
-                            <div class="timeline-desc">${item.desc || ''}</div>
-                            <button class="btn-history" onclick="showWorldHistory(${item.id}, false)">查看同時期世界歷史</button>
+                    <div class="world-history-card">
+                        <div style="font-weight:bold; color:#3182ce;">${name}</div>
+                        <div style="font-size:12px; color:#718096; margin-top:2px;">
+                            ${formatDate(p.startEra, p.startYear, p.startMonth, p.startDay)} 至 ${formatDate(p.endEra, p.endYear, p.endMonth, p.endDay)}
                         </div>
-                    </div>`;
+                        ${p.desc ? `<div style="font-size:13px; margin-top:4px; color:#4a5568;">${p.desc}</div>` : ''}
+                    </div>
+                `;
+            });
+        }
+
+        modalBody.innerHTML = html;
+        openModal('modalWorldHistory');
+    }
+
+    // 計算用於排序的時間值（西元前/西元、年、月、日轉換成統一數字）
+    function getSortTime(era, year, month, day) {
+        const y = era === 'BCE' ? -Math.abs(year) + 1 : Math.abs(year);
+        const m = month || 1;
+        const d = day || 1;
+        return y * 10000 + m * 100 + d;
+    }
+
+    // 更新選單下拉選項
+    function updateDropdowns() {
+        const filterRegion = document.getElementById('filterRegion');
+        const filterLand = document.getElementById('filterLand');
+        const filterPerson = document.getElementById('filterPerson');
+
+        const currentRegion = filterRegion.value;
+        const currentLand = filterLand.value;
+        const currentPerson = filterPerson.value;
+
+        const regionsSet = new Set();
+        const landsSet = new Set();
+        const personsSet = new Set();
+
+        window.events.forEach(e => {
+            (e.regions || []).forEach(r => regionsSet.add(r));
+            (e.lands || []).forEach(l => landsSet.add(l));
+        });
+
+        window.periods.forEach(p => {
+            (p.regions || []).forEach(r => regionsSet.add(r));
+            (p.lands || []).forEach(l => landsSet.add(l));
+            if (p.type === 'person' && p.personName) {
+                personsSet.add(p.personName);
             }
         });
 
-        if (!html) {
-            html = '<div style="text-align:center; color:#a0aec0; padding:40px;">目前無符合篩選條件的歷史紀錄</div>';
+        filterRegion.innerHTML = '<option value="ALL">全覽（全世界模式）</option>';
+        Array.from(regionsSet).sort().forEach(r => {
+            filterRegion.innerHTML += `<option value="${r}">${r}</option>`;
+        });
+
+        filterLand.innerHTML = '<option value="ALL">全部土地區域</option>';
+        Array.from(landsSet).sort().forEach(l => {
+            filterLand.innerHTML += `<option value="${l}">${l}</option>`;
+        });
+
+        filterPerson.innerHTML = '<option value="ALL">全部人物</option>';
+        Array.from(personsSet).sort().forEach(p => {
+            filterPerson.innerHTML += `<option value="${p}">${p}</option>`;
+        });
+
+        filterRegion.value = Array.from(filterRegion.options).some(o => o.value === currentRegion) ? currentRegion : "ALL";
+        filterLand.value = Array.from(filterLand.options).some(o => o.value === currentLand) ? currentLand : "ALL";
+        filterPerson.value = Array.from(filterPerson.options).some(o => o.value === currentPerson) ? currentPerson : "ALL";
+    }
+
+    // 渲染時間軸 (已調整為升序排列：時間最早的放最上面，較晚的放下面)
+    function renderTimeline() {
+        const regionFilter = document.getElementById('filterRegion').value;
+        const landFilter = document.getElementById('filterLand').value;
+        const personFilter = document.getElementById('filterPerson').value;
+
+        // 1. 篩選事件與時期
+        let filteredEvents = window.events.filter(e => {
+            const rMatch = regionFilter === 'ALL' || (e.regions || []).includes(regionFilter);
+            const lMatch = landFilter === 'ALL' || (e.lands || []).includes(landFilter);
+            return rMatch && lMatch;
+        });
+
+        let filteredPeriods = window.periods.filter(p => {
+            const rMatch = regionFilter === 'ALL' || (p.regions || []).includes(regionFilter);
+            const lMatch = landFilter === 'ALL' || (p.lands || []).includes(landFilter);
+            const pMatch = personFilter === 'ALL' || (p.type === 'person' && p.personName === personFilter);
+            return rMatch && lMatch && pMatch;
+        });
+
+        document.getElementById('loadStatsText').innerText = 
+            `已載入 ${filteredEvents.length} 個事件，${filteredPeriods.length} 個時期/生平`;
+
+        // 2. 合併資料並標註類型
+        const combined = [
+            ...filteredEvents.map(e => ({ ...e, itemType: 'event', sortVal: getSortTime(e.era, e.year, e.month, e.day) })),
+            ...filteredPeriods.map(p => ({ ...p, itemType: p.type || 'period', sortVal: getSortTime(p.startEra, p.startYear, p.startMonth, p.startDay) }))
+        ];
+
+        // 3. 按時間升序排序（最早的在最前面/最上面）
+        combined.sort((a, b) => a.sortVal - b.sortVal);
+
+        const listContainer = document.getElementById('timelineList');
+        listContainer.innerHTML = '';
+
+        if (combined.length === 0) {
+            listContainer.innerHTML = '<div style="text-align:center; color:#718096; padding:40px;">尚無符合條件的時間軸資料</div>';
+            return;
         }
 
-        listContainer.innerHTML = html;
-    }
-</script>
+        // 4. 產生卡片 HTML
+        combined.forEach(item => {
+            const isEvent = item.itemType === 'event';
+            const isPerson = item.itemType === 'person';
+            
+            let timeHtml = '';
+            let durationHtml = '';
+            let titleText = '';
+            let typeClass = 'type-event';
 
+            if (isEvent) {
+                typeClass = 'type-event';
+                timeHtml = formatDate(item.era, item.year, item.month, item.day);
+                titleText = item.title;
+            } else if (isPerson) {
+                typeClass = 'type-person';
+                timeHtml = `${formatDate(item.startEra, item.startYear, item.startMonth, item.startDay)} <br>至<br> ${formatDate(item.endEra, item.endYear, item.endMonth, item.endDay)}`;
+                const duration = calculateDuration(item.startEra, item.startYear, item.startMonth, item.startDay, item.endEra, item.endYear, item.endMonth, item.endDay);
+                if (duration) durationHtml = `<div class="duration-text">${duration}</div>`;
+                titleText = `${item.personName} 生平`;
+            } else {
+                typeClass = 'type-period';
+                timeHtml = `${formatDate(item.startEra, item.startYear, item.startMonth, item.startDay)} <br>至<br> ${formatDate(item.endEra, item.endYear, item.endMonth, item.endDay)}`;
+                const duration = calculateDuration(item.startEra, item.startYear, item.startMonth, item.startDay, item.endEra, item.endYear, item.endMonth, item.endDay);
+                if (duration) durationHtml = `<div class="duration-text">${duration}</div>`;
+                titleText = item.name;
+            }
+
+            const landsTags = (item.lands || []).map(l => `<span class="tag-item land">📍 ${l}</span>`).join(' ');
+            const regionsTags = (item.regions || []).map(r => `<span class="tag-item regime">🏛️ ${r}</span>`).join(' ');
+
+            let historyBtn = '';
+            if (!isEvent) {
+                const sName = isPerson ? item.personName : item.name;
+                historyBtn = `
+                    <button class="btn-history" onclick="showWorldHistory('${item.startEra}', ${item.startYear}, '${item.endEra}', ${item.endYear}, '${sName}')">
+                        查看同時期世界歷史
+                    </button>
+                `;
+            }
+
+            const html = `
+                <div class="timeline-item ${typeClass}">
+                    <div class="timeline-left">
+                        <div>${timeHtml}</div>
+                        ${durationHtml}
+                    </div>
+                    <div class="timeline-spine">
+                        <div class="timeline-node"></div>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="timeline-card-header">
+                            <div class="tag-group">
+                                ${landsTags}
+                                ${regionsTags}
+                            </div>
+                            <div class="card-actions">
+                                <button class="btn-action-edit" onclick="editItem(${item.id}, ${!isEvent})">✏️ 編輯</button>
+                                <button class="btn-action-delete" onclick="deleteItem(${item.id}, ${!isEvent})">🗑️ 刪除</button>
+                            </div>
+                        </div>
+                        <div class="timeline-title">${titleText}</div>
+                        ${item.desc ? `<div class="timeline-desc">${item.desc}</div>` : ''}
+                        ${historyBtn}
+                    </div>
+                </div>
+            `;
+
+            listContainer.innerHTML += html;
+        });
+    }
+
+    // 將全域方法掛載至 window
+    window.switchTab = switchTab;
+    window.openModal = openModal;
+    window.closeModal = closeModal;
+    window.handleAddEvent = handleAddEvent;
+    window.handleAddPeriod = handleAddPeriod;
+    window.handleAddPerson = handleAddPerson;
+    window.deleteItem = deleteItem;
+    window.editItem = editItem;
+    window.handleSaveEdit = handleSaveEdit;
+    window.showWorldHistory = showWorldHistory;
+    window.updateDropdowns = updateDropdowns;
+    window.renderTimeline = renderTimeline;
+</script>
 </body>
 </html>
