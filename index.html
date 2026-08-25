@@ -363,6 +363,9 @@
             font-weight: bold;
             cursor: pointer;
             transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }
 
         .btn-history:hover {
@@ -725,14 +728,18 @@
         return str;
     }
 
+    function getAbsoluteYear(era, year) {
+        return era === 'BCE' ? -Math.abs(year) + 1 : Math.abs(year);
+    }
+
     function calculateDuration(startEra, startYear, startMonth, startDay, endEra, endYear, endMonth, endDay) {
-        const sy = startEra === 'BCE' ? -Math.abs(startYear) + 1 : Math.abs(startYear);
-        const ey = endEra === 'BCE' ? -Math.abs(endYear) + 1 : Math.abs(endYear);
+        const sy = getAbsoluteYear(startEra, startYear);
+        const ey = getAbsoluteYear(endEra, endYear);
 
         const sm = startMonth || 1;
-        const em = endMonth || (endMonth === null && startMonth !== null ? 1 : (endMonth || 1));
+        const em = endMonth || 1;
         const sd = startDay || 1;
-        const ed = endDay || (endDay === null && startDay !== null ? 1 : (endDay || 1));
+        const ed = endDay || 1;
 
         let yDiff = ey - sy;
         let mDiff = em - sm;
@@ -862,6 +869,7 @@
         document.getElementById('editLands').value = (item.lands || []).join(', ');
         document.getElementById('editRegions').value = (item.regions || []).join(', ');
         document.getElementById('editDesc').value = item.desc || '';
+        document.getElementById('editTitle').value = item.title || item.name || item.personName || '';
 
         const eventBlock = document.getElementById('editEventTimeBlock');
         const periodBlock = document.getElementById('editPeriodTimeBlock');
@@ -873,7 +881,6 @@
             document.getElementById('editYear').value = item.year || '';
             document.getElementById('editMonth').value = item.month || '';
             document.getElementById('editDay').value = item.day || '';
-            document.getElementById('editTitle').value = item.title || '';
         } else {
             eventBlock.style.display = 'none';
             periodBlock.style.display = 'block';
@@ -881,12 +888,10 @@
             document.getElementById('editStartYear').value = item.startYear || '';
             document.getElementById('editStartMonth').value = item.startMonth || '';
             document.getElementById('editStartDay').value = item.startDay || '';
-
             document.getElementById('editEndEra').value = item.endEra || 'CE';
             document.getElementById('editEndYear').value = item.endYear || '';
             document.getElementById('editEndMonth').value = item.endMonth || '';
             document.getElementById('editEndDay').value = item.endDay || '';
-            document.getElementById('editTitle').value = item.name || item.personName || '';
         }
 
         openModal('modalEdit');
@@ -898,226 +903,240 @@
         const isPeriod = document.getElementById('editIsPeriod').value === "true";
         const type = document.getElementById('editType').value;
 
-        if (isPeriod) {
-            const index = window.periods.findIndex(p => p.id === id);
-            if (index !== -1) {
-                window.periods[index] = {
-                    ...window.periods[index],
-                    type: type,
-                    startEra: document.getElementById('editStartEra').value,
-                    startYear: parseInt(document.getElementById('editStartYear').value),
-                    startMonth: document.getElementById('editStartMonth').value ? parseInt(document.getElementById('editStartMonth').value) : null,
-                    startDay: document.getElementById('editStartDay').value ? parseInt(document.getElementById('editStartDay').value) : null,
-                    endEra: document.getElementById('editEndEra').value,
-                    endYear: parseInt(document.getElementById('editEndYear').value),
-                    endMonth: document.getElementById('editEndMonth').value ? parseInt(document.getElementById('editEndMonth').value) : null,
-                    endDay: document.getElementById('editEndDay').value ? parseInt(document.getElementById('editEndDay').value) : null,
-                    lands: parseTags(document.getElementById('editLands').value),
-                    regions: parseTags(document.getElementById('editRegions').value),
-                    desc: document.getElementById('editDesc').value
-                };
-                if (type === 'person') {
-                    window.periods[index].personName = document.getElementById('editTitle').value;
-                } else {
-                    window.periods[index].name = document.getElementById('editTitle').value;
-                }
-            }
+        let list = isPeriod ? window.periods : window.events;
+        let index = list.findIndex(item => item.id === id);
+        if (index === -1) return;
+
+        let updatedItem = { ...list[index] };
+        updatedItem.lands = parseTags(document.getElementById('editLands').value);
+        updatedItem.regions = parseTags(document.getElementById('editRegions').value);
+        updatedItem.desc = document.getElementById('editDesc').value;
+
+        if (!isPeriod) {
+            updatedItem.era = document.getElementById('editEra').value;
+            updatedItem.year = parseInt(document.getElementById('editYear').value);
+            updatedItem.month = document.getElementById('editMonth').value ? parseInt(document.getElementById('editMonth').value) : null;
+            updatedItem.day = document.getElementById('editDay').value ? parseInt(document.getElementById('editDay').value) : null;
+            updatedItem.title = document.getElementById('editTitle').value;
         } else {
-            const index = window.events.findIndex(ev => ev.id === id);
-            if (index !== -1) {
-                window.events[index] = {
-                    ...window.events[index],
-                    type: 'event',
-                    era: document.getElementById('editEra').value,
-                    year: parseInt(document.getElementById('editYear').value),
-                    month: document.getElementById('editMonth').value ? parseInt(document.getElementById('editMonth').value) : null,
-                    day: document.getElementById('editDay').value ? parseInt(document.getElementById('editDay').value) : null,
-                    lands: parseTags(document.getElementById('editLands').value),
-                    regions: parseTags(document.getElementById('editRegions').value),
-                    title: document.getElementById('editTitle').value,
-                    desc: document.getElementById('editDesc').value
-                };
+            updatedItem.startEra = document.getElementById('editStartEra').value;
+            updatedItem.startYear = parseInt(document.getElementById('editStartYear').value);
+            updatedItem.startMonth = document.getElementById('editStartMonth').value ? parseInt(document.getElementById('editStartMonth').value) : null;
+            updatedItem.startDay = document.getElementById('editStartDay').value ? parseInt(document.getElementById('editStartDay').value) : null;
+            updatedItem.endEra = document.getElementById('editEndEra').value;
+            updatedItem.endYear = parseInt(document.getElementById('editEndYear').value);
+            updatedItem.endMonth = document.getElementById('editEndMonth').value ? parseInt(document.getElementById('editEndMonth').value) : null;
+            updatedItem.endDay = document.getElementById('editEndDay').value ? parseInt(document.getElementById('editEndDay').value) : null;
+            
+            if (type === 'person') {
+                updatedItem.personName = document.getElementById('editTitle').value;
+            } else {
+                updatedItem.name = document.getElementById('editTitle').value;
             }
         }
 
+        list[index] = updatedItem;
         window.saveToCloud();
         closeModal('modalEdit');
         updateDropdowns();
         renderTimeline();
     }
 
-    function updateDropdowns() {
-        const regSelect = document.getElementById('filterRegion');
-        const landSelect = document.getElementById('filterLand');
-        const perSelect = document.getElementById('filterPerson');
+    // 計算兩個時間區段是否重疊
+    function checkOverlap(itemA, itemB) {
+        let startA, endA, startB, endB;
 
-        const currentReg = regSelect.value;
-        const currentLand = landSelect.value;
-        const currentPer = perSelect.value;
-
-        const regionsSet = new Set();
-        const landsSet = new Set();
-        const personsSet = new Set();
-
-        (window.events || []).forEach(e => {
-            (e.regions || []).forEach(r => regionsSet.add(r));
-            (e.lands || []).forEach(l => landsSet.add(l));
-        });
-
-        (window.periods || []).forEach(p => {
-            (p.regions || []).forEach(r => regionsSet.add(r));
-            (p.lands || []).forEach(l => landsSet.add(l));
-            if (p.type === 'person' && p.personName) personsSet.add(p.personName);
-        });
-
-        regSelect.innerHTML = '<option value="ALL">全覽（全世界模式）</option>';
-        regionsSet.forEach(r => regSelect.innerHTML += `<option value="${r}">${r}</option>`);
-
-        landSelect.innerHTML = '<option value="ALL">全部土地區域</option>';
-        landsSet.forEach(l => landSelect.innerHTML += `<option value="${l}">${l}</option>`);
-
-        perSelect.innerHTML = '<option value="ALL">全部人物</option>';
-        personsSet.forEach(p => perSelect.innerHTML += `<option value="${p}">${p}</option>`);
-
-        regSelect.value = regionsSet.has(currentReg) ? currentReg : 'ALL';
-        landSelect.value = landsSet.has(currentLand) ? currentLand : 'ALL';
-        perSelect.value = personsSet.has(currentPer) ? currentPer : 'ALL';
-    }
-
-    function getAbsYear(era, year) {
-        return era === 'BCE' ? -Math.abs(year) + 1 : Math.abs(year);
-    }
-
-    function renderTimeline() {
-        const container = document.getElementById('timelineList');
-        const filterRegion = document.getElementById('filterRegion').value;
-        const filterLand = document.getElementById('filterLand').value;
-        const filterPerson = document.getElementById('filterPerson').value;
-
-        let filteredEvents = (window.events || []).filter(item => {
-            if (filterRegion !== 'ALL' && !(item.regions || []).includes(filterRegion)) return false;
-            if (filterLand !== 'ALL' && !(item.lands || []).includes(filterLand)) return false;
-            return true;
-        });
-
-        let filteredPeriods = (window.periods || []).filter(item => {
-            if (filterRegion !== 'ALL' && !(item.regions || []).includes(filterRegion)) return false;
-            if (filterLand !== 'ALL' && !(item.lands || []).includes(filterLand)) return false;
-            if (filterPerson !== 'ALL' && item.personName !== filterPerson) return false;
-            return true;
-        });
-
-        document.getElementById('loadStatsText').innerText = 
-            `已載入 ${filteredEvents.length} 個事件，${filteredPeriods.length} 個時期/生平`;
-
-        let allItems = [
-            ...filteredEvents.map(e => ({ ...e, isPeriod: false, absYear: getAbsYear(e.era, e.year) })),
-            ...filteredPeriods.map(p => ({ ...p, isPeriod: true, absYear: getAbsYear(p.startEra, p.startYear) }))
-        ];
-
-        allItems.sort((a, b) => a.absYear - b.absYear);
-
-        container.innerHTML = '';
-
-        if (allItems.length === 0) {
-            container.innerHTML = '<div style="text-align:center; padding: 40px; color: #a0aec0;">尚無符合條件的歷史紀錄</div>';
-            return;
+        if (itemA.type === 'event') {
+            startA = getAbsoluteYear(itemA.era, itemA.year);
+            endA = startA;
+        } else {
+            startA = getAbsoluteYear(itemA.startEra, itemA.startYear);
+            endA = getAbsoluteYear(itemA.endEra, itemA.endYear);
         }
 
-        allItems.forEach(item => {
-            const div = document.createElement('div');
-            const itemType = item.type || (item.isPeriod ? 'period' : 'event');
-            div.className = `timeline-item type-${itemType}`;
+        if (itemB.type === 'event') {
+            startB = getAbsoluteYear(itemB.era, itemB.year);
+            endB = startB;
+        } else {
+            startB = getAbsoluteYear(itemB.startEra, itemB.startYear);
+            endB = getAbsoluteYear(itemB.endEra, itemB.endYear);
+        }
 
-            let timeStr = '';
-            let durationHtml = '';
-
-            if (item.isPeriod) {
-                timeStr = `${formatDate(item.startEra, item.startYear, item.startMonth, item.startDay)} <br>~<br> ${formatDate(item.endEra, item.endYear, item.endMonth, item.endDay)}`;
-                const dur = calculateDuration(item.startEra, item.startYear, item.startMonth, item.startDay, item.endEra, item.endYear, item.endMonth, item.endDay);
-                if (dur) durationHtml = `<div class="duration-text">${dur}</div>`;
-            } else {
-                timeStr = formatDate(item.era, item.year, item.month, item.day);
-            }
-
-            const title = item.title || item.name || item.personName || '無標題';
-            const landsTag = (item.lands || []).map(l => `<span class="tag-item land">📍 ${l}</span>`).join(' ');
-            const regionsTag = (item.regions || []).map(r => `<span class="tag-item regime">🏛️ ${r}</span>`).join(' ');
-
-            let actionBtnHtml = '';
-            if (itemType === 'person' || itemType === 'period') {
-                actionBtnHtml = `<button class="btn-history" onclick="showWorldHistory(${item.id})">🔍 查看同時期世界歷史</button>`;
-            }
-
-            div.innerHTML = `
-                <div class="timeline-left">
-                    <div>${timeStr}</div>
-                    ${durationHtml}
-                </div>
-                <div class="timeline-spine">
-                    <div class="timeline-node"></div>
-                </div>
-                <div class="timeline-content">
-                    <div class="timeline-card-header">
-                        <div class="tag-group">
-                            ${landsTag} ${regionsTag}
-                        </div>
-                        <div class="card-actions">
-                            <button class="btn-action-edit" onclick="editItem(${item.id}, ${item.isPeriod})">編輯</button>
-                            <button class="btn-action-delete" onclick="deleteItem(${item.id}, ${item.isPeriod})">刪除</button>
-                        </div>
-                    </div>
-                    <div class="timeline-title">${title}</div>
-                    <div class="timeline-desc">${item.desc || ''}</div>
-                    ${actionBtnHtml}
-                </div>
-            `;
-            container.appendChild(div);
-        });
+        return Math.max(startA, startB) <= Math.min(endA, endB);
     }
 
-    function showWorldHistory(periodId) {
-        const period = (window.periods || []).find(p => p.id === periodId);
-        if (!period) return;
+    function showWorldHistory(id, isPeriod) {
+        const sourceItem = isPeriod 
+            ? (window.periods || []).find(p => p.id === id)
+            : (window.events || []).find(e => e.id === id);
 
-        const startAbs = getAbsYear(period.startEra, period.startYear);
-        const endAbs = getAbsYear(period.endEra, period.endYear);
+        if (!sourceItem) return;
 
-        const title = period.personName || period.name || '歷史時期';
-        document.getElementById('modalWorldHistoryTitle').innerText = `與「${title}」同時期的世界歷史事件`;
+        const titleText = sourceItem.title || sourceItem.name || sourceItem.personName;
+        document.getElementById('modalWorldHistoryTitle').innerText = `與「${titleText}」同時期的世界歷史`;
 
-        const matchedEvents = (window.events || []).filter(e => {
-            const evAbs = getAbsYear(e.era, e.year);
-            return evAbs >= startAbs && evAbs <= endAbs;
-        });
+        const allItems = [...(window.events || []), ...(window.periods || [])];
+        const concurrentItems = allItems.filter(item => item.id !== id && checkOverlap(sourceItem, item));
 
-        const body = document.getElementById('modalWorldHistoryBody');
-        body.innerHTML = '';
+        const bodyContainer = document.getElementById('modalWorldHistoryBody');
+        bodyContainer.innerHTML = '';
 
-        if (matchedEvents.length === 0) {
-            body.innerHTML = '<p style="color:#718096;">在這段時間範圍內，尚未錄入其他世界歷史事件。</p>';
+        if (concurrentItems.length === 0) {
+            bodyContainer.innerHTML = '<p style="color:#718096; padding: 10px 0;">未找到同時間重疊的其他世界歷史紀錄。</p>';
         } else {
-            matchedEvents.forEach(e => {
-                const card = document.createElement('div');
-                card.className = 'world-history-card';
-                card.innerHTML = `
-                    <div style="font-size:12px; font-weight:bold; color:var(--accent-red);">
-                        ${formatDate(e.era, e.year, e.month, e.day)}
+            concurrentItems.sort((a, b) => {
+                let yA = a.type === 'event' ? getAbsoluteYear(a.era, a.year) : getAbsoluteYear(a.startEra, a.startYear);
+                let yB = b.type === 'event' ? getAbsoluteYear(b.era, b.year) : getAbsoluteYear(b.startEra, b.startYear);
+                return yA - yB;
+            });
+
+            concurrentItems.forEach(item => {
+                let timeStr = item.type === 'event'
+                    ? formatDate(item.era, item.year, item.month, item.day)
+                    : `${formatDate(item.startEra, item.startYear, item.startMonth, item.startDay)} ~ ${formatDate(item.endEra, item.endYear, item.endMonth, item.endDay)}`;
+
+                let itemName = item.title || item.name || item.personName;
+                let tagsStr = [...(item.lands || []), ...(item.regions || [])].join('、');
+
+                let cardHtml = `
+                    <div class="world-history-card">
+                        <div style="font-size:12px; color:var(--accent-red); font-weight:bold;">${timeStr}</div>
+                        <div style="font-weight:bold; font-size:15px; margin: 4px 0;">${itemName} ${tagsStr ? `<span style="font-size:12px; font-weight:normal; color:#718096;">(${tagsStr})</span>` : ''}</div>
+                        ${item.desc ? `<div style="font-size:13px; color:#4a5568;">${item.desc}</div>` : ''}
                     </div>
-                    <div style="font-weight:bold; font-size:15px; margin: 4px 0;">${e.title}</div>
-                    <div style="font-size:13px; color:#4a5568;">${e.desc || ''}</div>
                 `;
-                body.appendChild(card);
+                bodyContainer.insertAdjacentHTML('beforeend', cardHtml);
             });
         }
 
         openModal('modalWorldHistory');
     }
 
-    window.onload = function() {
-        if (window.updateDropdowns) window.updateDropdowns();
-        if (window.renderTimeline) window.renderTimeline();
-    };
+    function updateDropdowns() {
+        const regionSelect = document.getElementById('filterRegion');
+        const landSelect = document.getElementById('filterLand');
+        const personSelect = document.getElementById('filterPerson');
+
+        const allItems = [...(window.events || []), ...(window.periods || [])];
+        
+        const regions = new Set();
+        const lands = new Set();
+        const persons = new Set();
+
+        allItems.forEach(item => {
+            (item.regions || []).forEach(r => regions.add(r));
+            (item.lands || []).forEach(l => lands.add(l));
+            if (item.type === 'person' && item.personName) {
+                persons.add(item.personName);
+            }
+        });
+
+        let curRegion = regionSelect.value;
+        let curLand = landSelect.value;
+        let curPerson = personSelect.value;
+
+        regionSelect.innerHTML = '<option value="ALL">全覽（全世界模式）</option>';
+        regions.forEach(r => regionSelect.add(new Option(r, r)));
+        regionSelect.value = regions.has(curRegion) ? curRegion : 'ALL';
+
+        landSelect.innerHTML = '<option value="ALL">全部土地區域</option>';
+        lands.forEach(l => landSelect.add(new Option(l, l)));
+        landSelect.value = lands.has(curLand) ? curLand : 'ALL';
+
+        personSelect.innerHTML = '<option value="ALL">全部人物</option>';
+        persons.forEach(p => personSelect.add(new Option(p, p)));
+        personSelect.value = persons.has(curPerson) ? curPerson : 'ALL';
+    }
+
+    function renderTimeline() {
+        const filterRegion = document.getElementById('filterRegion').value;
+        const filterLand = document.getElementById('filterLand').value;
+        const filterPerson = document.getElementById('filterPerson').value;
+
+        const allItems = [
+            ...(window.events || []).map(e => ({ ...e, isPeriod: false })),
+            ...(window.periods || []).map(p => ({ ...p, isPeriod: true }))
+        ];
+
+        let filtered = allItems.filter(item => {
+            if (filterRegion !== 'ALL' && !(item.regions || []).includes(filterRegion)) return false;
+            if (filterLand !== 'ALL' && !(item.lands || []).includes(filterLand)) return false;
+            if (filterPerson !== 'ALL') {
+                if (item.type === 'person' && item.personName !== filterPerson) return false;
+                if (item.type !== 'person') return false;
+            }
+            return true;
+        });
+
+        filtered.sort((a, b) => {
+            let yA = a.isPeriod ? getAbsoluteYear(a.startEra, a.startYear) : getAbsoluteYear(a.era, a.year);
+            let yB = b.isPeriod ? getAbsoluteYear(b.startEra, b.startYear) : getAbsoluteYear(b.era, b.year);
+            return yA - yB;
+        });
+
+        document.getElementById('loadStatsText').innerText = `已載入 ${(window.events || []).length} 個事件，${(window.periods || []).length} 個時期/生平`;
+
+        const container = document.getElementById('timelineList');
+        container.innerHTML = '';
+
+        if (filtered.length === 0) {
+            container.innerHTML = '<div style="text-align:center; padding:40px; color:#a0aec0;">尚無符條件的歷史紀錄</div>';
+            return;
+        }
+
+        filtered.forEach(item => {
+            let typeClass = `type-${item.type || (item.isPeriod ? 'period' : 'event')}`;
+            let dateStr = '';
+            let durationStr = '';
+
+            if (item.isPeriod) {
+                dateStr = `${formatDate(item.startEra, item.startYear, item.startMonth, item.startDay)} <br>~<br> ${formatDate(item.endEra, item.endYear, item.endMonth, item.endDay)}`;
+                durationStr = calculateDuration(item.startEra, item.startYear, item.startMonth, item.startDay, item.endEra, item.endYear, item.endMonth, item.endDay);
+            } else {
+                dateStr = formatDate(item.era, item.year, item.month, item.day);
+            }
+
+            let nameStr = item.title || item.name || item.personName;
+            let iconStr = item.type === 'person' ? '👤 ' : (item.type === 'period' ? '⏳ ' : '📍 ');
+
+            let landsHtml = (item.lands || []).map(l => `<span class="tag-item land">📍 ${l}</span>`).join('');
+            let regionsHtml = (item.regions || []).map(r => `<span class="tag-item regime">🏛️ ${r}</span>`).join('');
+
+            let html = `
+                <div class="timeline-item ${typeClass}">
+                    <div class="timeline-left">
+                        ${dateStr}
+                        ${durationStr ? `<div class="duration-text">${durationStr}</div>` : ''}
+                    </div>
+                    <div class="timeline-spine">
+                        <div class="timeline-node"></div>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="timeline-card-header">
+                            <div class="tag-group">
+                                ${landsHtml}
+                                ${regionsHtml}
+                            </div>
+                            <div class="card-actions">
+                                <button class="btn-action-edit" onclick="editItem(${item.id}, ${item.isPeriod})">編輯</button>
+                                <button class="btn-action-delete" onclick="deleteItem(${item.id}, ${item.isPeriod})">刪除</button>
+                            </div>
+                        </div>
+                        <div class="timeline-title">${iconStr}${nameStr}</div>
+                        ${item.desc ? `<div class="timeline-desc">${item.desc}</div>` : ''}
+                        <button class="btn-history" onclick="showWorldHistory(${item.id}, ${item.isPeriod})">
+                            🌐 查看同時期世界歷史
+                        </button>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+        });
+    }
+
+    window.updateDropdowns = updateDropdowns;
+    window.renderTimeline = renderTimeline;
 </script>
+
 </body>
 </html>
